@@ -1,0 +1,6 @@
+{
+  "name": "FUTMANAGER Mobile",
+  "description": "Jogo de gerenciamento de futebol mobile-first inspirado em Football Manager e Brasfoot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
