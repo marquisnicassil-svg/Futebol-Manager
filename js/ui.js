@@ -25,7 +25,8 @@ import {
   createMatchSimulation, 
   simulateMatchMinute, 
   substitutePlayerInMatch, 
-  finalizeMatchResult 
+  finalizeMatchResult,
+  ensureAllLeaguesInitialized 
 } from './game.js';
 import { 
   getFinancialOverview, 
@@ -69,9 +70,10 @@ let matchSimulationTimer = null;
 let matchSimulationSpeed = 1; // 1 (normal), 2 (rápido), 5 (muito rápido)
 let inMatchSubOutPlayerId = null;
 
-// Controles da aba de Campeonato (Etapa 4)
+// Controles da aba de Campeonato e Competições / Outras Ligas
 let currentChampTab = 'standings'; // 'standings', 'calendar', 'scorers'
 let calendarSelectedRound = null;
+let selectedCompetitionLeagueId = null; // null = liga do clube do usuário, ou 'bra_serie_a', 'eng_premier', 'esp_la_liga'
 
 // Callbacks registrados pelo app.js
 let onStartNewCareer = null;
@@ -809,12 +811,12 @@ function renderDashboardLayout(container, career) {
         <span class="nav-tab-label">Táticas</span>
       </button>
 
-      <button class="nav-tab-item ${currentSubScreen === 'calendar' ? 'active' : ''}" data-tab="calendar">
+      <button class="nav-tab-item ${(currentSubScreen === 'calendar' || currentSubScreen === 'competitions') ? 'active' : ''}" data-tab="calendar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <circle cx="12" cy="8" r="7"></circle>
           <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
         </svg>
-        <span class="nav-tab-label">Campeonato</span>
+        <span class="nav-tab-label">Competições</span>
       </button>
 
       <button class="nav-tab-item ${currentSubScreen === 'more' ? 'active' : ''}" data-tab="more">
@@ -839,6 +841,7 @@ function renderDashboardLayout(container, career) {
         renderTacticsScreen(contentArea, career);
         break;
       case 'calendar':
+      case 'competitions':
         renderChampionshipScreen(contentArea, career);
         break;
       case 'market':
@@ -1754,41 +1757,104 @@ function openSubstitutionDrawer(contentArea, career, slotIndex) {
 }
 
 /* ==========================================================================
-   TELA DE CAMPEONATO: CLASSIFICAÇÃO, CALENDÁRIO & ARTILHARIA (ETAPA 4)
+/* ==========================================================================
+   TELA DE CAMPEONATO & OUTRAS LIGAS: CLASSIFICAÇÃO, CALENDÁRIO & RESULTADOS (ETAPA 4 MELHORADA)
    ========================================================================== */
 function renderChampionshipScreen(contentArea, career) {
   career = getCareerState() || career;
-  const standings = career.standings || [];
-  const calendar = career.calendar || [];
-  const topScorers = career.topScorers || [];
-  const totalRounds = career.totalRounds || (calendar.length || 22);
+  ensureAllLeaguesInitialized(career);
+
+  // Define a liga atualmente visualizada (padrão: a liga do clube do usuário)
+  const currentViewedLeagueId = selectedCompetitionLeagueId || career.league.id;
+  const isUserLeague = currentViewedLeagueId === career.league.id;
+
+  // Obter dados da liga selecionada
+  let viewedLeagueData = null;
+  if (isUserLeague) {
+    viewedLeagueData = {
+      leagueId: career.league.id,
+      name: career.league.name,
+      country: career.league.country,
+      flag: career.league.id === 'bra_serie_a' ? '🇧🇷' : career.league.id === 'eng_premier' ? '🏴󠁧󠁢󠁥󠁮󠁧󠁿' : '🇪🇸',
+      currencySymbol: career.league.currencySymbol,
+      totalRounds: career.totalRounds || (career.calendar?.length || 22),
+      currentRound: career.currentRound || 1,
+      calendar: career.calendar || [],
+      standings: career.standings || [],
+      topScorers: career.topScorers || [],
+      isSeasonFinished: !!career.isSeasonFinished,
+      champion: career.champion || null
+    };
+  } else if (career.otherLeagues && career.otherLeagues[currentViewedLeagueId]) {
+    viewedLeagueData = career.otherLeagues[currentViewedLeagueId];
+  } else {
+    // Fallback caso não exista
+    viewedLeagueData = {
+      leagueId: currentViewedLeagueId,
+      name: currentViewedLeagueId === 'bra_serie_a' ? 'Brasileirão Série A' : currentViewedLeagueId === 'eng_premier' ? 'Premier League' : 'La Liga',
+      country: currentViewedLeagueId === 'bra_serie_a' ? 'Brasil' : currentViewedLeagueId === 'eng_premier' ? 'Inglaterra' : 'Espanha',
+      flag: currentViewedLeagueId === 'bra_serie_a' ? '🇧🇷' : currentViewedLeagueId === 'eng_premier' ? '🏴󠁧󠁢󠁥󠁮󠁧󠁿' : '🇪🇸',
+      currencySymbol: currentViewedLeagueId === 'bra_serie_a' ? 'R$' : currentViewedLeagueId === 'eng_premier' ? '£' : '€',
+      totalRounds: 22,
+      currentRound: career.currentRound || 1,
+      calendar: [],
+      standings: [],
+      topScorers: [],
+      isSeasonFinished: false,
+      champion: null
+    };
+  }
+
+  const standings = viewedLeagueData.standings || [];
+  const calendar = viewedLeagueData.calendar || [];
+  const topScorers = viewedLeagueData.topScorers || [];
+  const totalRounds = viewedLeagueData.totalRounds || (calendar.length || 22);
 
   if (!calendarSelectedRound || calendarSelectedRound > totalRounds || calendarSelectedRound < 1) {
-    calendarSelectedRound = career.currentRound || 1;
+    calendarSelectedRound = viewedLeagueData.currentRound || 1;
   }
 
   const selectedRoundData = calendar[calendarSelectedRound - 1] || { roundNumber: calendarSelectedRound, matches: [], completed: false };
 
   contentArea.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+    <!-- Top Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
       <div>
-        <h2 style="font-size: 18px; font-weight: 800; line-height: 1.2;">${career.league.name}</h2>
+        <h2 style="font-size: 18px; font-weight: 800; line-height: 1.2;">
+          ${viewedLeagueData.flag} ${viewedLeagueData.name}
+        </h2>
         <div style="font-size: 11px; color: var(--text-muted);">
-          Temporada ${career.currentSeason} · Rodada ${career.currentRound} de ${totalRounds}
-          ${career.isSeasonFinished ? ' · <span style="color: #f59e0b; font-weight: 700;">FINALIZADA</span>' : ''}
+          Temporada ${career.currentSeason} · Rodada ${viewedLeagueData.currentRound} de ${totalRounds}
+          ${isUserLeague ? ' · <span style="color: var(--color-primary); font-weight: 700;">SUA LIGA</span>' : ' · <span style="color: #60a5fa; font-weight: 600;">SIMULADA</span>'}
+          ${viewedLeagueData.isSeasonFinished ? ' · <span style="color: #f59e0b; font-weight: 700;">FINALIZADA</span>' : ''}
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" id="btn-return-overview">← Voltar</button>
     </div>
 
-    ${career.isSeasonFinished ? `
+    <!-- SELETOR DE OUTRAS LIGAS / COMPETIÇÕES (Brasil, Inglaterra, Espanha) -->
+    <div class="competition-league-selector">
+      ${INITIAL_LEAGUES.map(league => {
+        const isCurrentActive = league.id === currentViewedLeagueId;
+        const isUserClubLeague = league.id === career.league.id;
+        return `
+          <button class="league-selector-btn ${isCurrentActive ? 'active' : ''}" data-league-id="${league.id}">
+            <span class="league-selector-badge">${league.flag}</span>
+            <span>${league.country}</span>
+            ${isUserClubLeague ? '<span class="league-selector-indicator">Meu Clube</span>' : ''}
+          </button>
+        `;
+      }).join('')}
+    </div>
+
+    ${viewedLeagueData.isSeasonFinished ? `
       <div class="season-finished-card">
         <div class="trophy-badge">🏆</div>
         <div style="font-size: 17px; font-weight: 900; color: #f59e0b; margin-bottom: 4px;">
           CAMPEONATO ENCERRADO!
         </div>
         <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px;">
-          Campeão: ${career.champion?.clubName || (standings[0] && standings[0].clubName) || 'Campeão'}
+          Campeão: ${viewedLeagueData.champion?.clubName || (standings[0] && standings[0].clubName) || 'Campeão'}
         </div>
         <div style="font-size: 11px; color: var(--text-muted);">
           Artilheiro: <strong style="color: #fff">${topScorers[0] ? `${topScorers[0].playerName} (${topScorers[0].goals} gols, ${topScorers[0].clubName})` : 'Nenhum'}</strong>
@@ -1802,7 +1868,7 @@ function renderChampionshipScreen(contentArea, career) {
         📊 Classificação
       </button>
       <button class="champ-pill-btn ${currentChampTab === 'calendar' ? 'active' : ''}" data-champ-tab="calendar">
-        📅 Rodadas
+        📅 Rodadas & Resultados
       </button>
       <button class="champ-pill-btn ${currentChampTab === 'scorers' ? 'active' : ''}" data-champ-tab="scorers">
         ⚽ Artilharia
@@ -1811,15 +1877,25 @@ function renderChampionshipScreen(contentArea, career) {
 
     <!-- Conteúdo da Aba Ativa -->
     <div id="champ-tab-content-area">
-      ${currentChampTab === 'standings' ? renderStandingsTabHtml(career, standings) :
-        currentChampTab === 'calendar' ? renderCalendarTabHtml(career, calendarSelectedRound, selectedRoundData, totalRounds) :
-        renderTopScorersTabHtml(career, topScorers)}
+      ${currentChampTab === 'standings' ? renderStandingsTabHtml(career, standings, viewedLeagueData) :
+        currentChampTab === 'calendar' ? renderCalendarTabHtml(career, calendarSelectedRound, selectedRoundData, totalRounds, viewedLeagueData) :
+        renderTopScorersTabHtml(career, topScorers, viewedLeagueData)}
     </div>
   `;
 
   attachReturnBtn();
 
-  // Navegação entre abas do campeonato
+  // Alternar entre as três ligas (Brasil, Inglaterra, Espanha)
+  contentArea.querySelectorAll('.league-selector-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const lid = e.currentTarget.dataset.leagueId;
+      selectedCompetitionLeagueId = lid;
+      calendarSelectedRound = null; // Reinicia para a rodada atual da nova liga
+      renderChampionshipScreen(contentArea, career);
+    });
+  });
+
+  // Navegação entre abas (Classificação, Rodadas, Artilharia)
   contentArea.querySelectorAll('.champ-pill-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       currentChampTab = e.currentTarget.dataset.champTab;
@@ -1852,7 +1928,7 @@ function renderChampionshipScreen(contentArea, career) {
     const btnCurrent = document.getElementById('btn-jump-current-round');
     if (btnCurrent) {
       btnCurrent.addEventListener('click', () => {
-        calendarSelectedRound = career.currentRound || 1;
+        calendarSelectedRound = viewedLeagueData.currentRound || 1;
         renderChampionshipScreen(contentArea, career);
       });
     }
@@ -1862,8 +1938,10 @@ function renderChampionshipScreen(contentArea, career) {
 /**
  * Renderiza HTML da tabela de classificação
  */
-function renderStandingsTabHtml(career, standings) {
-  const isBrasil = career.league.id === 'bra_serie_a';
+function renderStandingsTabHtml(career, standings, viewedLeagueData) {
+  const isBrasil = (viewedLeagueData ? viewedLeagueData.leagueId : career.league.id) === 'bra_serie_a';
+  const userClubId = career.club?.id;
+  const isUserLeague = (viewedLeagueData ? viewedLeagueData.leagueId : career.league.id) === career.league.id;
   const totalClubs = standings.length;
 
   return `
@@ -1887,7 +1965,7 @@ function renderStandingsTabHtml(career, standings) {
           <tbody>
             ${standings.map((club, idx) => {
               const pos = idx + 1;
-              const isUser = club.clubId === career.club.id;
+              const isUser = isUserLeague && club.clubId === userClubId;
               let posClass = '';
               if (pos <= 4) posClass = 'pos-g4';
               else if (isBrasil && pos > (totalClubs - 4)) posClass = 'pos-relegation';
@@ -1897,10 +1975,11 @@ function renderStandingsTabHtml(career, standings) {
                   <td class="standings-col-pos ${posClass}">${pos}º</td>
                   <td class="standings-col-club">
                     <div class="standings-club-cell">
-                      <div class="standings-mini-shield" style="background: linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor});">
-                        ${club.shortName}
+                      <div class="standings-mini-shield" style="background: linear-gradient(135deg, ${club.primaryColor || '#444'}, ${club.secondaryColor || '#222'});">
+                        ${club.shortName || 'CLU'}
                       </div>
                       <span style="${isUser ? 'color: var(--color-primary); font-weight: 800;' : ''}">${club.clubName}</span>
+                      ${isUser ? '<span style="font-size: 9px; background: var(--color-primary); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">VOCÊ</span>' : ''}
                     </div>
                   </td>
                   <td>${club.played}</td>
@@ -1923,7 +2002,7 @@ function renderStandingsTabHtml(career, standings) {
       <div class="standings-legend">
         <div class="legend-item">
           <div class="legend-dot" style="background: #10b981;"></div>
-          <span>1º ao 4º: Vaga Libertadores / Champions</span>
+          <span>1º ao 4º: Vaga Libertadores / Champions League</span>
         </div>
         ${isBrasil ? `
           <div class="legend-item">
@@ -1939,8 +2018,11 @@ function renderStandingsTabHtml(career, standings) {
 /**
  * Renderiza HTML da aba de calendário e rodadas
  */
-function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds) {
-  const isCurrentRound = activeRoundNum === career.currentRound;
+function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds, viewedLeagueData) {
+  const currentRoundNum = viewedLeagueData ? viewedLeagueData.currentRound : career.currentRound;
+  const isCurrentRound = activeRoundNum === currentRoundNum;
+  const userClubId = career.club?.id;
+  const isUserLeague = (viewedLeagueData ? viewedLeagueData.leagueId : career.league.id) === career.league.id;
 
   return `
     <div class="round-selector-bar">
@@ -1963,7 +2045,7 @@ function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds) {
     ${!isCurrentRound ? `
       <div style="text-align: center; margin-bottom: 12px;">
         <button id="btn-jump-current-round" class="btn btn-secondary btn-sm" style="font-size: 11px;">
-          📍 Ir para a Rodada Atual (${career.currentRound})
+          📍 Ir para a Rodada Atual (${currentRoundNum})
         </button>
       </div>
     ` : ''}
@@ -1972,7 +2054,7 @@ function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds) {
       ${(roundData.matches || []).map(m => {
         const homeClub = getClubById(m.homeClubId);
         const awayClub = getClubById(m.awayClubId);
-        const isUserMatch = m.homeClubId === career.club.id || m.awayClubId === career.club.id;
+        const isUserMatch = isUserLeague && (m.homeClubId === userClubId || m.awayClubId === userClubId);
 
         return `
           <div class="fixture-card ${isUserMatch ? 'user-fixture' : ''}">
@@ -1981,7 +2063,7 @@ function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds) {
                 <div class="club-shield" style="width: 32px; height: 32px; font-size: 10px; background: linear-gradient(135deg, ${homeClub?.primaryColor || '#333'}, ${homeClub?.secondaryColor || '#111'});">
                   ${homeClub?.shortName || 'CAS'}
                 </div>
-                <div class="fixture-team-name ${m.homeClubId === career.club.id ? 'font-bold' : ''}">
+                <div class="fixture-team-name ${isUserMatch && m.homeClubId === userClubId ? 'font-bold' : ''}">
                   ${homeClub?.name || m.homeClubId}
                 </div>
               </div>
@@ -2002,7 +2084,7 @@ function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds) {
                 <div class="club-shield" style="width: 32px; height: 32px; font-size: 10px; background: linear-gradient(135deg, ${awayClub?.primaryColor || '#333'}, ${awayClub?.secondaryColor || '#111'});">
                   ${awayClub?.shortName || 'VIS'}
                 </div>
-                <div class="fixture-team-name ${m.awayClubId === career.club.id ? 'font-bold' : ''}">
+                <div class="fixture-team-name ${isUserMatch && m.awayClubId === userClubId ? 'font-bold' : ''}">
                   ${awayClub?.name || m.awayClubId}
                 </div>
               </div>
@@ -2025,14 +2107,14 @@ function renderCalendarTabHtml(career, activeRoundNum, roundData, totalRounds) {
 /**
  * Renderiza HTML da aba de artilharia
  */
-function renderTopScorersTabHtml(career, topScorers) {
+function renderTopScorersTabHtml(career, topScorers, viewedLeagueData) {
   if (!topScorers || topScorers.length === 0) {
     return `
       <div class="card" style="text-align: center; padding: 28px 16px;">
         <div style="font-size: 32px; margin-bottom: 8px;">⚽</div>
         <div style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Nenhum Gol Registrado</div>
         <div style="font-size: 12px; color: var(--text-muted);">
-          A artilharia será atualizada assim que os primeiros gols forem marcados no campeonato!
+          A artilharia desta liga será atualizada conforme as partidas forem disputadas!
         </div>
       </div>
     `;
@@ -3978,8 +4060,11 @@ function renderMoreMenuScreen(contentArea, career) {
     </div>
 
     <div class="card" style="margin-bottom: 16px;">
-      <div class="card-title">Diretoria & Finanças</div>
+      <div class="card-title">Competições & Diretoria</div>
       <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button id="btn-more-go-competitions" class="btn btn-secondary" style="justify-content: flex-start; gap: 10px;">
+          🏆 Competições e Outras Ligas (Brasil, Inglaterra, Espanha)
+        </button>
         <button id="btn-more-go-market" class="btn btn-secondary" style="justify-content: flex-start; gap: 10px;">
           💼 Mercado da Bola (Transferências)
         </button>
@@ -4032,6 +4117,14 @@ function renderMoreMenuScreen(contentArea, career) {
   `;
 
   attachReturnBtn();
+
+  const btnMoreCompetitions = document.getElementById('btn-more-go-competitions');
+  if (btnMoreCompetitions) {
+    btnMoreCompetitions.addEventListener('click', () => {
+      currentSubScreen = 'calendar';
+      renderApp();
+    });
+  }
 
   const btnMoreMarket = document.getElementById('btn-more-go-market');
   if (btnMoreMarket) {

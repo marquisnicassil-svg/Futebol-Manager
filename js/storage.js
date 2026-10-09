@@ -7,7 +7,7 @@
 
 import { generateClubSquad, calculateSquadOverall, getClubById, getClubsByLeague } from './data.js';
 import { FORMATIONS, TACTICAL_MENTALITIES, buildOptimalLineup } from './state.js';
-import { generateLeagueCalendar, generateInitialStandings } from './game.js';
+import { generateLeagueCalendar, generateInitialStandings, ensureAllLeaguesInitialized } from './game.js';
 import { ensureAllLeagueSquads } from './market.js';
 
 export const STORAGE_KEY = 'futmanager_career_save_v1';
@@ -167,6 +167,7 @@ export function loadCareer() {
       state.finances.weeklyWageExpense = Math.round(monthlyWages / 4);
     }
 
+    ensureAllLeaguesInitialized(state);
     ensureAllLeagueSquads(state);
 
     return state;

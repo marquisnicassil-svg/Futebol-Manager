@@ -2564,6 +2564,73 @@ p {
   border-color: rgba(245, 158, 11, 0.4);
 }
 
+/* ==========================================================================
+   COMPETIÇÕES E OUTRAS LIGAS (BRASIL, INGLATERRA, ESPANHA)
+   ========================================================================== */
+.competition-league-selector {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.competition-league-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.league-selector-btn {
+  flex: 1;
+  min-width: 105px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.league-selector-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+}
+
+.league-selector-btn.active {
+  background: linear-gradient(135deg, rgba(229, 37, 56, 0.2), rgba(255, 51, 75, 0.08));
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(229, 37, 56, 0.25);
+}
+
+.league-selector-badge {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.league-selector-indicator {
+  font-size: 9px;
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 2px 5px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.league-selector-btn.active .league-selector-indicator {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
 
 
 

@@ -4,7 +4,7 @@
  * Regras da carreira, simulação de partidas, eventos, calendário e campeonato (Etapa 4)
  */
 
-import { getClubsByLeague, getClubById, generateClubSquad, formatMoney } from './data.js';
+import { INITIAL_LEAGUES, getClubsByLeague, getClubById, generateClubSquad, formatMoney } from './data.js';
 import { FORMATIONS, TACTICAL_MENTALITIES, buildOptimalLineup } from './state.js';
 
 /* ==========================================================================
@@ -930,6 +930,8 @@ export function finalizeMatchResult(careerState, match) {
     }
   }
 
+  const finishedRoundNumber = roundData ? roundData.roundNumber : (match.round || careerState.currentRound || 1);
+
   if (roundData && Array.isArray(roundData.matches)) {
     // Localizar a partida do usuário nesta rodada (tanto em casa quanto fora)
     const userFixture = roundData.matches.find(
@@ -1015,5 +1017,123 @@ export function finalizeMatchResult(careerState, match) {
     careerState.currentRound = pendingRound.roundNumber;
   }
 
+  // 9. Simular rodada correspondente em TODAS as outras ligas (Brasil, Inglaterra, Espanha)
+  // Garante que todas as competições avancem sincronizadas rodada a rodada
+  advanceOtherLeagues(careerState, finishedRoundNumber);
+
   return careerState;
 }
+
+/**
+ * Inicializa ou assegura a estrutura de todas as ligas (Brasil, Inglaterra, Espanha) na carreira
+ * @param {Object} careerState 
+ */
+export function ensureAllLeaguesInitialized(careerState) {
+  if (!careerState) return;
+
+  if (!careerState.otherLeagues || typeof careerState.otherLeagues !== 'object') {
+    careerState.otherLeagues = {};
+  }
+
+  INITIAL_LEAGUES.forEach(league => {
+    // Se for a liga principal do usuário, sincroniza com os campos de topo
+    if (league.id === careerState.league.id) {
+      careerState.otherLeagues[league.id] = {
+        leagueId: league.id,
+        name: league.name,
+        country: league.country,
+        flag: league.flag,
+        currencySymbol: league.currencySymbol,
+        totalRounds: careerState.totalRounds || (careerState.calendar?.length || 22),
+        currentRound: careerState.currentRound || 1,
+        calendar: careerState.calendar,
+        standings: careerState.standings,
+        topScorers: careerState.topScorers || [],
+        isSeasonFinished: !!careerState.isSeasonFinished,
+        champion: careerState.champion || null
+      };
+      return;
+    }
+
+    // Se a outra liga ainda não foi inicializada
+    if (!careerState.otherLeagues[league.id] || !Array.isArray(careerState.otherLeagues[league.id].calendar)) {
+      const { calendar, totalRounds } = generateLeagueCalendar(league.id);
+      const standings = generateInitialStandings(league.id);
+      careerState.otherLeagues[league.id] = {
+        leagueId: league.id,
+        name: league.name,
+        country: league.country,
+        flag: league.flag,
+        currencySymbol: league.currencySymbol,
+        totalRounds,
+        currentRound: 1,
+        calendar,
+        standings,
+        topScorers: [],
+        isSeasonFinished: false,
+        champion: null
+      };
+    }
+  });
+}
+
+/**
+ * Avança e simula os jogos da rodada para todas as outras ligas
+ * @param {Object} careerState 
+ * @param {number} roundNumber Rodada que acabou de ser concluída
+ */
+export function advanceOtherLeagues(careerState, roundNumber) {
+  if (!careerState) return;
+  ensureAllLeaguesInitialized(careerState);
+
+  INITIAL_LEAGUES.forEach(league => {
+    // A liga do usuário já foi simulada na partida principal
+    if (league.id === careerState.league.id) {
+      if (careerState.otherLeagues && careerState.otherLeagues[league.id]) {
+        careerState.otherLeagues[league.id].currentRound = careerState.currentRound;
+        careerState.otherLeagues[league.id].standings = careerState.standings;
+        careerState.otherLeagues[league.id].calendar = careerState.calendar;
+        careerState.otherLeagues[league.id].topScorers = careerState.topScorers;
+        careerState.otherLeagues[league.id].isSeasonFinished = careerState.isSeasonFinished;
+        careerState.otherLeagues[league.id].champion = careerState.champion;
+      }
+      return;
+    }
+
+    const otherData = careerState.otherLeagues[league.id];
+    if (!otherData || otherData.isSeasonFinished) return;
+
+    // Simula a rodada correspondente se ainda não estiver concluída
+    const roundData = otherData.calendar.find(r => r.roundNumber === roundNumber);
+    if (roundData && !roundData.completed && Array.isArray(roundData.matches)) {
+      roundData.matches.forEach(match => {
+        if (!match.completed) {
+          const homeClub = getClubById(match.homeClubId);
+          const awayClub = getClubById(match.awayClubId);
+          if (homeClub && awayClub) {
+            const result = simulateAiMatch(homeClub, awayClub, careerState);
+            match.homeScore = result.homeScore;
+            match.awayScore = result.awayScore;
+            match.completed = true;
+            match.scorers = result.scorers || [];
+          }
+        }
+      });
+      roundData.completed = true;
+
+      // Recalcular classificação independente da outra liga
+      otherData.standings = recalculateStandings(league.id, otherData.calendar);
+
+      // Avançar rodada da outra liga
+      const nextPending = otherData.calendar.find(r => !r.completed);
+      if (!nextPending) {
+        otherData.isSeasonFinished = true;
+        otherData.currentRound = otherData.totalRounds;
+        otherData.champion = otherData.standings[0] || null;
+      } else {
+        otherData.currentRound = nextPending.roundNumber;
+      }
+    }
+  });
+}
+

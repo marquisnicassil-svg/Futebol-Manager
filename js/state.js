@@ -6,7 +6,7 @@
  */
 
 import { getLeagueById, getClubById, generateClubSquad, calculateSquadOverall } from './data.js';
-import { generateLeagueCalendar, generateInitialStandings } from './game.js';
+import { generateLeagueCalendar, generateInitialStandings, ensureAllLeaguesInitialized } from './game.js';
 import { buyPlayer as marketBuyPlayer, sellPlayer as marketSellPlayer, getAvailableMarketPlayers, ensureAllLeagueSquads } from './market.js';
 
 // Definição das formações com 4 defensores (Regra 4)
@@ -376,9 +376,12 @@ export function initCareer(managerData, leagueId, clubId) {
     champion: null,
     // MERCADO E FINANÇAS (ETAPA 5)
     marketPool: null,
-    freeAgents: null
+    freeAgents: null,
+    // COMPETIÇÕES E OUTRAS LIGAS
+    otherLeagues: {}
   };
 
+  ensureAllLeaguesInitialized(careerState);
   ensureAllLeagueSquads(careerState);
   notifyListeners();
   return careerState;
