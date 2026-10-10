@@ -4,673 +4,14 @@
  * Base de dados inicial de Ligas, Clubes, Nacionalidades e Sistema de Jogadores
  */
 
-export const NATIONALITIES = [
-  { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
-  { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
-  { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-  { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
-  { code: 'EN', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-  { code: 'IT', name: 'Itália', flag: '🇮🇹' },
-  { code: 'DE', name: 'Alemanha', flag: '🇩🇪' },
-  { code: 'FR', name: 'França', flag: '🇫🇷' },
-  { code: 'UY', name: 'Uruguai', flag: '🇺🇾' }
-];
+import { EXPANDED_NATIONALITIES, EXPANDED_LEAGUES, EXPANDED_CLUBS } from './leagues_data.js';
 
-export const INITIAL_LEAGUES = [
-  {
-    id: 'bra_serie_a',
-    name: 'Brasileirão Série A',
-    country: 'Brasil',
-    countryCode: 'BR',
-    flag: '🇧🇷',
-    currencySymbol: 'R$',
-    rounds: 22,
-    reputation: 4,
-    description: 'A elite do futebol brasileiro. Muito equilíbrio e calendário disputado.'
-  },
-  {
-    id: 'eng_premier',
-    name: 'Premier League',
-    country: 'Inglaterra',
-    countryCode: 'EN',
-    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    currencySymbol: '£',
-    rounds: 22,
-    reputation: 5,
-    description: 'A liga mais rica do mundo, com elencos galácticos e alta competitividade.'
-  },
-  {
-    id: 'esp_la_liga',
-    name: 'La Liga',
-    country: 'Espanha',
-    countryCode: 'ES',
-    flag: '🇪🇸',
-    currencySymbol: '€',
-    rounds: 22,
-    reputation: 5,
-    description: 'O campeonato espanhol, marcado pela técnica refinada e gigantes mundiais.'
-  }
-];
+export const NATIONALITIES = EXPANDED_NATIONALITIES;
 
-export const INITIAL_CLUBS = [
-  // --- BRASIL (SÉRIE A) - 12 Clubes ---
-  {
-    id: 'fla',
-    leagueId: 'bra_serie_a',
-    name: 'Flamengo',
-    shortName: 'FLA',
-    city: 'Rio de Janeiro',
-    president: 'Rodolfo Landim',
-    primaryColor: '#c3281c',
-    secondaryColor: '#111111',
-    reputation: 5,
-    budget: 85000000,
-    wageBudget: 4200000,
-    expectation: 'Campeão da Liga',
-    overall: 82,
-    stadium: 'Maracanã',
-    stadiumCapacity: 78838
-  },
-  {
-    id: 'pal',
-    leagueId: 'bra_serie_a',
-    name: 'Palmeiras',
-    shortName: 'PAL',
-    city: 'São Paulo',
-    president: 'Leila Pereira',
-    primaryColor: '#006437',
-    secondaryColor: '#ffffff',
-    reputation: 5,
-    budget: 78000000,
-    wageBudget: 3900000,
-    expectation: 'Campeão da Liga',
-    overall: 81,
-    stadium: 'Allianz Parque',
-    stadiumCapacity: 43713
-  },
-  {
-    id: 'atletico_mg',
-    leagueId: 'bra_serie_a',
-    name: 'Atlético Mineiro',
-    shortName: 'CAM',
-    city: 'Belo Horizonte',
-    president: 'Sérgio Coelho',
-    primaryColor: '#111111',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 45000000,
-    wageBudget: 2800000,
-    expectation: 'Vaga na Libertadores',
-    overall: 78,
-    stadium: 'Arena MRV',
-    stadiumCapacity: 46000
-  },
-  {
-    id: 'sao_paulo',
-    leagueId: 'bra_serie_a',
-    name: 'São Paulo',
-    shortName: 'SAO',
-    city: 'São Paulo',
-    president: 'Julio Casares',
-    primaryColor: '#cf152b',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 38000000,
-    wageBudget: 2600000,
-    expectation: 'Vaga na Libertadores',
-    overall: 77,
-    stadium: 'Morumbi',
-    stadiumCapacity: 66795
-  },
-  {
-    id: 'botafogo',
-    leagueId: 'bra_serie_a',
-    name: 'Botafogo',
-    shortName: 'BOT',
-    city: 'Rio de Janeiro',
-    president: 'John Textor',
-    primaryColor: '#1c1c1c',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 52000000,
-    wageBudget: 3100000,
-    expectation: 'Vaga na Libertadores',
-    overall: 78,
-    stadium: 'Nilton Santos',
-    stadiumCapacity: 44661
-  },
-  {
-    id: 'fluminense',
-    leagueId: 'bra_serie_a',
-    name: 'Fluminense',
-    shortName: 'FLU',
-    city: 'Rio de Janeiro',
-    president: 'Mário Bittencourt',
-    primaryColor: '#7a192c',
-    secondaryColor: '#006144',
-    reputation: 4,
-    budget: 32000000,
-    wageBudget: 2400000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 76,
-    stadium: 'Maracanã',
-    stadiumCapacity: 78838
-  },
-  {
-    id: 'gremio',
-    leagueId: 'bra_serie_a',
-    name: 'Grêmio',
-    shortName: 'GRE',
-    city: 'Porto Alegre',
-    president: 'Alberto Guerra',
-    primaryColor: '#0d80bf',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 30000000,
-    wageBudget: 2300000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 76,
-    stadium: 'Arena do Grêmio',
-    stadiumCapacity: 55662
-  },
-  {
-    id: 'internacional',
-    leagueId: 'bra_serie_a',
-    name: 'Internacional',
-    shortName: 'INT',
-    city: 'Porto Alegre',
-    president: 'Alessandro Barcellos',
-    primaryColor: '#cc092f',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 34000000,
-    wageBudget: 2500000,
-    expectation: 'Vaga na Libertadores',
-    overall: 77,
-    stadium: 'Beira-Rio',
-    stadiumCapacity: 50128
-  },
-  {
-    id: 'corinthians',
-    leagueId: 'bra_serie_a',
-    name: 'Corinthians',
-    shortName: 'COR',
-    city: 'São Paulo',
-    president: 'Augusto Melo',
-    primaryColor: '#ffffff',
-    secondaryColor: '#111111',
-    reputation: 4,
-    budget: 35000000,
-    wageBudget: 2700000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 76,
-    stadium: 'Neo Química Arena',
-    stadiumCapacity: 49205
-  },
-  {
-    id: 'cruzeiro',
-    leagueId: 'bra_serie_a',
-    name: 'Cruzeiro',
-    shortName: 'CRU',
-    city: 'Belo Horizonte',
-    president: 'Pedro Lourenço',
-    primaryColor: '#004185',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 40000000,
-    wageBudget: 2600000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 76,
-    stadium: 'Mineirão',
-    stadiumCapacity: 61846
-  },
-  {
-    id: 'vasco',
-    leagueId: 'bra_serie_a',
-    name: 'Vasco da Gama',
-    shortName: 'VAS',
-    city: 'Rio de Janeiro',
-    president: 'Pedrinho',
-    primaryColor: '#111111',
-    secondaryColor: '#ffffff',
-    reputation: 3,
-    budget: 25000000,
-    wageBudget: 1900000,
-    expectation: 'Evitar Rebaixamento',
-    overall: 74,
-    stadium: 'São Januário',
-    stadiumCapacity: 21880
-  },
-  {
-    id: 'fortaleza',
-    leagueId: 'bra_serie_a',
-    name: 'Fortaleza',
-    shortName: 'FOR',
-    city: 'Fortaleza',
-    president: 'Marcelo Paz',
-    primaryColor: '#114084',
-    secondaryColor: '#d61d2d',
-    reputation: 3,
-    budget: 28000000,
-    wageBudget: 1800000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 75,
-    stadium: 'Castelão',
-    stadiumCapacity: 63903
-  },
+export const INITIAL_LEAGUES = EXPANDED_LEAGUES;
 
-  // --- INGLATERRA (PREMIER LEAGUE) - 12 Clubes ---
-  {
-    id: 'mancity',
-    leagueId: 'eng_premier',
-    name: 'Manchester City',
-    shortName: 'MCI',
-    city: 'Manchester',
-    president: 'Khaldoon Al Mubarak',
-    primaryColor: '#6cabdd',
-    secondaryColor: '#ffffff',
-    reputation: 5,
-    budget: 120000000,
-    wageBudget: 6500000,
-    expectation: 'Campeão da Liga',
-    overall: 86,
-    stadium: 'Etihad Stadium',
-    stadiumCapacity: 53400
-  },
-  {
-    id: 'arsenal',
-    leagueId: 'eng_premier',
-    name: 'Arsenal',
-    shortName: 'ARS',
-    city: 'Londres',
-    president: 'Stan Kroenke',
-    primaryColor: '#db0007',
-    secondaryColor: '#ffffff',
-    reputation: 5,
-    budget: 95000000,
-    wageBudget: 5200000,
-    expectation: 'Campeão da Liga',
-    overall: 84,
-    stadium: 'Emirates Stadium',
-    stadiumCapacity: 60704
-  },
-  {
-    id: 'liverpool',
-    leagueId: 'eng_premier',
-    name: 'Liverpool',
-    shortName: 'LIV',
-    city: 'Liverpool',
-    president: 'Tom Werner',
-    primaryColor: '#c8102e',
-    secondaryColor: '#ffffff',
-    reputation: 5,
-    budget: 90000000,
-    wageBudget: 5100000,
-    expectation: 'Campeão da Liga',
-    overall: 84,
-    stadium: 'Anfield',
-    stadiumCapacity: 61276
-  },
-  {
-    id: 'chelsea',
-    leagueId: 'eng_premier',
-    name: 'Chelsea',
-    shortName: 'CHE',
-    city: 'Londres',
-    president: 'Todd Boehly',
-    primaryColor: '#034694',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 85000000,
-    wageBudget: 4800000,
-    expectation: 'Vaga na Champions League',
-    overall: 81,
-    stadium: 'Stamford Bridge',
-    stadiumCapacity: 40343
-  },
-  {
-    id: 'manutd',
-    leagueId: 'eng_premier',
-    name: 'Manchester United',
-    shortName: 'MUN',
-    city: 'Manchester',
-    president: 'Sir Jim Ratcliffe',
-    primaryColor: '#da291c',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 80000000,
-    wageBudget: 5000000,
-    expectation: 'Vaga na Champions League',
-    overall: 80,
-    stadium: 'Old Trafford',
-    stadiumCapacity: 74310
-  },
-  {
-    id: 'tottenham',
-    leagueId: 'eng_premier',
-    name: 'Tottenham',
-    shortName: 'TOT',
-    city: 'Londres',
-    president: 'Daniel Levy',
-    primaryColor: '#132257',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 75000000,
-    wageBudget: 4600000,
-    expectation: 'Vaga na Champions League',
-    overall: 81,
-    stadium: 'Tottenham Stadium',
-    stadiumCapacity: 62850
-  },
-  {
-    id: 'newcastle',
-    leagueId: 'eng_premier',
-    name: 'Newcastle United',
-    shortName: 'NEW',
-    city: 'Newcastle',
-    president: 'Yasir Al-Rumayyan',
-    primaryColor: '#241f20',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 70000000,
-    wageBudget: 4200000,
-    expectation: 'Vaga nas Copas Europeias',
-    overall: 80,
-    stadium: "St. James' Park",
-    stadiumCapacity: 52305
-  },
-  {
-    id: 'astonvilla',
-    leagueId: 'eng_premier',
-    name: 'Aston Villa',
-    shortName: 'AVL',
-    city: 'Birmingham',
-    president: 'Nassef Sawiris',
-    primaryColor: '#670e36',
-    secondaryColor: '#95bfe5',
-    reputation: 4,
-    budget: 50000000,
-    wageBudget: 3200000,
-    expectation: 'Vaga nas Copas Europeias',
-    overall: 79,
-    stadium: 'Villa Park',
-    stadiumCapacity: 42682
-  },
-  {
-    id: 'brighton',
-    leagueId: 'eng_premier',
-    name: 'Brighton',
-    shortName: 'BHA',
-    city: 'Brighton',
-    president: 'Tony Bloom',
-    primaryColor: '#0057b8',
-    secondaryColor: '#ffcd00',
-    reputation: 3,
-    budget: 42000000,
-    wageBudget: 2800000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 77,
-    stadium: 'Amex Stadium',
-    stadiumCapacity: 31800
-  },
-  {
-    id: 'westham',
-    leagueId: 'eng_premier',
-    name: 'West Ham',
-    shortName: 'WHU',
-    city: 'Londres',
-    president: 'David Sullivan',
-    primaryColor: '#7a263a',
-    secondaryColor: '#1bb1e7',
-    reputation: 3,
-    budget: 45000000,
-    wageBudget: 3000000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 77,
-    stadium: 'London Stadium',
-    stadiumCapacity: 62500
-  },
-  {
-    id: 'everton',
-    leagueId: 'eng_premier',
-    name: 'Everton',
-    shortName: 'EVE',
-    city: 'Liverpool',
-    president: 'Farhad Moshiri',
-    primaryColor: '#003399',
-    secondaryColor: '#ffffff',
-    reputation: 3,
-    budget: 35000000,
-    wageBudget: 2500000,
-    expectation: 'Evitar Rebaixamento',
-    overall: 75,
-    stadium: 'Goodison Park',
-    stadiumCapacity: 39572
-  },
-  {
-    id: 'wolves',
-    leagueId: 'eng_premier',
-    name: 'Wolverhampton',
-    shortName: 'WOL',
-    city: 'Wolverhampton',
-    president: 'Jeff Shi',
-    primaryColor: '#fdb913',
-    secondaryColor: '#231f20',
-    reputation: 3,
-    budget: 36000000,
-    wageBudget: 2400000,
-    expectation: 'Evitar Rebaixamento',
-    overall: 75,
-    stadium: 'Molineux Stadium',
-    stadiumCapacity: 32050
-  },
+export const INITIAL_CLUBS = EXPANDED_CLUBS;
 
-  // --- ESPANHA (LA LIGA) - 12 Clubes ---
-  {
-    id: 'realmadrid',
-    leagueId: 'esp_la_liga',
-    name: 'Real Madrid',
-    shortName: 'RMA',
-    city: 'Madrid',
-    president: 'Florentino Pérez',
-    primaryColor: '#eeeee0',
-    secondaryColor: '#00529f',
-    reputation: 5,
-    budget: 130000000,
-    wageBudget: 7000000,
-    expectation: 'Campeão da Liga',
-    overall: 87,
-    stadium: 'Santiago Bernabéu',
-    stadiumCapacity: 84000
-  },
-  {
-    id: 'barcelona',
-    leagueId: 'esp_la_liga',
-    name: 'Barcelona',
-    shortName: 'BAR',
-    city: 'Barcelona',
-    president: 'Joan Laporta',
-    primaryColor: '#a50044',
-    secondaryColor: '#004d98',
-    reputation: 5,
-    budget: 65000000,
-    wageBudget: 5500000,
-    expectation: 'Campeão da Liga',
-    overall: 84,
-    stadium: 'Camp Nou',
-    stadiumCapacity: 99354
-  },
-  {
-    id: 'atleticomadrid',
-    leagueId: 'esp_la_liga',
-    name: 'Atlético de Madrid',
-    shortName: 'ATM',
-    city: 'Madrid',
-    president: 'Enrique Cerezo',
-    primaryColor: '#cb3524',
-    secondaryColor: '#272e61',
-    reputation: 4,
-    budget: 60000000,
-    wageBudget: 4200000,
-    expectation: 'Vaga na Champions League',
-    overall: 82,
-    stadium: 'Metropolitano',
-    stadiumCapacity: 70460
-  },
-  {
-    id: 'athleticbilbao',
-    leagueId: 'esp_la_liga',
-    name: 'Athletic Bilbao',
-    shortName: 'ATH',
-    city: 'Bilbao',
-    president: 'Jon Uriarte',
-    primaryColor: '#ee2524',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 32000000,
-    wageBudget: 2200000,
-    expectation: 'Vaga nas Copas Europeias',
-    overall: 79,
-    stadium: 'San Mamés',
-    stadiumCapacity: 53289
-  },
-  {
-    id: 'realsociedad',
-    leagueId: 'esp_la_liga',
-    name: 'Real Sociedad',
-    shortName: 'RSO',
-    city: 'San Sebastián',
-    president: 'Jokin Aperribay',
-    primaryColor: '#0067b1',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 35000000,
-    wageBudget: 2400000,
-    expectation: 'Vaga nas Copas Europeias',
-    overall: 78,
-    stadium: 'Reale Arena',
-    stadiumCapacity: 39313
-  },
-  {
-    id: 'realbetis',
-    leagueId: 'esp_la_liga',
-    name: 'Real Betis',
-    shortName: 'BET',
-    city: 'Sevilha',
-    president: 'Ángel Haro',
-    primaryColor: '#0bb364',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 28000000,
-    wageBudget: 2100000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 78,
-    stadium: 'Benito Villamarín',
-    stadiumCapacity: 60721
-  },
-  {
-    id: 'villarreal',
-    leagueId: 'esp_la_liga',
-    name: 'Villarreal',
-    shortName: 'VIL',
-    city: 'Vila-real',
-    president: 'Fernando Roig',
-    primaryColor: '#f5e300',
-    secondaryColor: '#00529f',
-    reputation: 4,
-    budget: 38000000,
-    wageBudget: 2700000,
-    expectation: 'Vaga nas Copas Europeias',
-    overall: 78,
-    stadium: 'Estadio de la Cerámica',
-    stadiumCapacity: 23500
-  },
-  {
-    id: 'sevilla',
-    leagueId: 'esp_la_liga',
-    name: 'Sevilla FC',
-    shortName: 'SEV',
-    city: 'Sevilha',
-    president: 'José María del Nido',
-    primaryColor: '#d4001f',
-    secondaryColor: '#ffffff',
-    reputation: 4,
-    budget: 40000000,
-    wageBudget: 2900000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 78,
-    stadium: 'Ramón Sánchez-Pizjuán',
-    stadiumCapacity: 43883
-  },
-  {
-    id: 'valencia',
-    leagueId: 'esp_la_liga',
-    name: 'Valencia CF',
-    shortName: 'VAL',
-    city: 'Valência',
-    president: 'Peter Lim',
-    primaryColor: '#ffffff',
-    secondaryColor: '#ee3524',
-    reputation: 3,
-    budget: 30000000,
-    wageBudget: 2300000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 76,
-    stadium: 'Mestalla',
-    stadiumCapacity: 49430
-  },
-  {
-    id: 'celta',
-    leagueId: 'esp_la_liga',
-    name: 'Celta de Vigo',
-    shortName: 'CEL',
-    city: 'Vigo',
-    president: 'Marián Mouriño',
-    primaryColor: '#87ceeb',
-    secondaryColor: '#ffffff',
-    reputation: 3,
-    budget: 26000000,
-    wageBudget: 2000000,
-    expectation: 'Metade Superior da Tabela',
-    overall: 75,
-    stadium: 'Abanca-Balaídos',
-    stadiumCapacity: 24870
-  },
-  {
-    id: 'osasuna',
-    leagueId: 'esp_la_liga',
-    name: 'Osasuna',
-    shortName: 'OSA',
-    city: 'Pamplona',
-    president: 'Luis Sabalza',
-    primaryColor: '#c8102e',
-    secondaryColor: '#0a2240',
-    reputation: 3,
-    budget: 24000000,
-    wageBudget: 1900000,
-    expectation: 'Evitar Rebaixamento',
-    overall: 75,
-    stadium: 'El Sadar',
-    stadiumCapacity: 23576
-  },
-  {
-    id: 'mallorca',
-    leagueId: 'esp_la_liga',
-    name: 'Mallorca',
-    shortName: 'MLL',
-    city: 'Palma',
-    president: 'Andy Kohlberg',
-    primaryColor: '#e20613',
-    secondaryColor: '#000000',
-    reputation: 3,
-    budget: 22000000,
-    wageBudget: 1800000,
-    expectation: 'Evitar Rebaixamento',
-    overall: 74,
-    stadium: 'Son Moix',
-    stadiumCapacity: 23142
-  }
-];
 
 /**
  * Retorna os clubes filtrados por liga
@@ -786,16 +127,60 @@ export function calculateSquadOverall(squad, lineup = []) {
  */
 export const ROSTER_NAMES = {
   BR: {
-    first: ['Gabriel', 'Lucas', 'Rodrigo', 'Matheus', 'Vinicius', 'Bruno', 'Felipe', 'Eduardo', 'Thiago', 'Gustavo', 'Danilo', 'Rafael', 'Luan', 'Murilo', 'Everton', 'Marcos', 'Kaio', 'André', 'Igor', 'Pedro'],
-    last: ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Almeida', 'Lopes', 'Soares', 'Fernandes', 'Vieira', 'Barbosa']
+    first: ['Gabriel', 'Lucas', 'Rodrigo', 'Matheus', 'Vinicius', 'Bruno', 'Felipe', 'Eduardo', 'Thiago', 'Gustavo', 'Danilo', 'Rafael', 'Luan', 'Murilo', 'Everton', 'Marcos', 'Kaio', 'André', 'Igor', 'Pedro', 'Rayan', 'Estêvão', 'Endrick', 'Breno', 'Arthur'],
+    last: ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Almeida', 'Lopes', 'Soares', 'Fernandes', 'Vieira', 'Barbosa', 'Ramos', 'Teixeira', 'Cardoso', 'Araújo', 'Melo']
   },
   EN: {
-    first: ['Harry', 'Jack', 'Declan', 'Marcus', 'Phil', 'Jude', 'Bukayo', 'Cole', 'John', 'Kyle', 'James', 'Trent', 'Luke', 'Jordan', 'Oliver', 'Harvey', 'Mason', 'Conor', 'Lewis', 'Ben'],
-    last: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'White', 'Harris', 'Clark', 'Walker', 'Young', 'Wright']
+    first: ['Harry', 'Jack', 'Declan', 'Marcus', 'Phil', 'Jude', 'Bukayo', 'Cole', 'John', 'Kyle', 'James', 'Trent', 'Luke', 'Jordan', 'Oliver', 'Harvey', 'Mason', 'Conor', 'Lewis', 'Ben', 'Edward', 'George', 'William', 'Alfie', 'Sam'],
+    last: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'White', 'Harris', 'Clark', 'Walker', 'Young', 'Wright', 'Baker', 'Green', 'Evans', 'King', 'Cooper']
   },
   ES: {
-    first: ['Alejandro', 'Pablo', 'Pedri', 'Gavi', 'Lamine', 'Ferran', 'Dani', 'Mikel', 'Rodri', 'Alvaro', 'Nico', 'Unai', 'David', 'Sergio', 'Inigo', 'Marc', 'Pau', 'Alex', 'Jesus', 'Gerard'],
-    last: ['Garcia', 'Martinez', 'Lopez', 'Sanchez', 'Gonzalez', 'Rodriguez', 'Fernandez', 'Perez', 'Gomez', 'Martin', 'Ruiz', 'Diaz', 'Navarro', 'Torres', 'Ramos', 'Vazquez', 'Castro', 'Romero', 'Morata', 'Iglesias']
+    first: ['Alejandro', 'Pablo', 'Pedri', 'Gavi', 'Lamine', 'Ferran', 'Dani', 'Mikel', 'Rodri', 'Alvaro', 'Nico', 'Unai', 'David', 'Sergio', 'Inigo', 'Marc', 'Pau', 'Alex', 'Jesus', 'Gerard', 'Hugo', 'Borja', 'Adrian', 'Yeremy', 'Brais'],
+    last: ['Garcia', 'Martinez', 'Lopez', 'Sanchez', 'Gonzalez', 'Rodriguez', 'Fernandez', 'Perez', 'Gomez', 'Martin', 'Ruiz', 'Diaz', 'Navarro', 'Torres', 'Ramos', 'Vazquez', 'Castro', 'Romero', 'Morata', 'Iglesias', 'Mendez', 'Herrera', 'Alvarez', 'Suarez', 'Moreno']
+  },
+  DE: {
+    first: ['Florian', 'Jamal', 'Joshua', 'Kai', 'Leroy', 'Leon', 'Toni', 'Thomas', 'Manuel', 'Marc', 'Nico', 'Antonio', 'Maximilian', 'Julian', 'Robin', 'Jonas', 'Pascal', 'Deniz', 'Waldemar', 'Kevin', 'Lukas', 'Felix', 'Niklas', 'David', 'Lars'],
+    last: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schröder', 'Neumann', 'Schwarz', 'Zimmermann', 'Braun', 'Krüger', 'Hofmann', 'Hartmann', 'Lange']
+  },
+  IT: {
+    first: ['Federico', 'Nicolo', 'Alessandro', 'Gianluigi', 'Lorenzo', 'Davide', 'Giacomo', 'Matteo', 'Manuel', 'Francesco', 'Riccardo', 'Bryan', 'Gianluca', 'Ciro', 'Stephan', 'Samuele', 'Giorgio', 'Andrea', 'Marco', 'Leonardo', 'Mattia', 'Edoardo', 'Pietro', 'Domenico', 'Simone'],
+    last: ['Rossi', 'Ferrari', 'Russo', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Mancini', 'Costa', 'Giordano', 'Rizzo', 'Lombardi', 'Moretti', 'Barbieri', 'Fontana', 'Santoro', 'Mariani', 'Rinaldi', 'Caruso']
+  },
+  FR: {
+    first: ['Kylian', 'Antoine', 'Aurélien', 'Eduardo', 'Ousmane', 'Kingsley', 'Marcus', 'Dayot', 'William', 'Jules', 'Théo', 'Mike', 'Randal', 'Bradley', 'Warren', 'Youssouf', 'Moussa', 'Adrien', 'Lucas', 'Benjamin', 'Jonathan', 'Tanguy', 'Rayan', 'Christopher', 'Enzo'],
+    last: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Lefebvre', 'Michel', 'Garcia', 'David', 'Bertrand', 'Roux', 'Vincent', 'Fournier', 'Morel', 'Girard', 'Andre', 'Mercier', 'Dupont']
+  },
+  PT: {
+    first: ['Bernardo', 'Bruno', 'Diogo', 'Rafael', 'Ruben', 'Joao', 'Goncalo', 'Vitinha', 'Pedro', 'Nuno', 'Cristiano', 'Antonio', 'Danilo', 'Matheus', 'Francisco', 'Otavio', 'Palhinha', 'Rui', 'Jose', 'Renato', 'Tiago', 'Fabio', 'Andre', 'Tomas', 'Ricardo'],
+    last: ['Silva', 'Santos', 'Ferreira', 'Pereira', 'Oliveira', 'Costa', 'Rodrigues', 'Martins', 'Jesus', 'Sousa', 'Fernandes', 'Goncalves', 'Gomes', 'Lopes', 'Marques', 'Alves', 'Ribeiro', 'Pinto', 'Carvalho', 'Teixeira', 'Moreira', 'Correia', 'Mendes', 'Nunes', 'Vieira']
+  },
+  AR: {
+    first: ['Lionel', 'Julian', 'Lautaro', 'Rodrigo', 'Enzo', 'Alexis', 'Emiliano', 'Cristian', 'Nahuel', 'Nicolas', 'Leandro', 'Giovani', 'Alejandro', 'Thiago', 'Valentin', 'Facundo', 'Esequiel', 'Franco', 'Lucas', 'Marcos', 'Mateo', 'Agustin', 'Tomas', 'Santiago', 'Ignacio'],
+    last: ['Messi', 'Alvarez', 'Martinez', 'De Paul', 'Fernandez', 'Mac Allister', 'Romero', 'Molina', 'Otamendi', 'Tagliafico', 'Paredes', 'Lo Celso', 'Garnacho', 'Almada', 'Barco', 'Carboni', 'Palacios', 'Armani', 'Acuna', 'Montiel', 'Correa', 'Dybala', 'Gonzalez', 'Simeone', 'Buendia']
+  },
+  UY: {
+    first: ['Federico', 'Darwin', 'Ronald', 'Manuel', 'Rodrigo', 'Nicolas', 'Facundo', 'Mathias', 'Sebastian', 'Giorgian', 'Nahitan', 'Sergio', 'Guillermo', 'Lucas', 'Brian', 'Maxi', 'Emiliano', 'Matias', 'Agustin', 'Diego', 'Luciano', 'Santiago', 'Ignacio', 'Gaston', 'Felipe'],
+    last: ['Valverde', 'Nunez', 'Araujo', 'Ugarte', 'Bentancur', 'De la Cruz', 'Pellistri', 'Olivera', 'Caceres', 'Arrascaeta', 'Nandez', 'Rochet', 'Varela', 'Torreira', 'Rodriguez', 'Gomez', 'Martinez', 'Vina', 'Canobbio', 'Suarez', 'Cavani', 'Godin', 'Gimenez', 'Coates', 'Vecino']
+  },
+  CL: {
+    first: ['Arturo', 'Alexis', 'Gary', 'Claudio', 'Ben', 'Erick', 'Marcelino', 'Victor', 'Paulo', 'Gabriel', 'Brayan', 'Alexander', 'Diego', 'Dario', 'Gonzalo', 'Felipe', 'Cesar', 'Carlos', 'Vicente', 'Ignacio', 'Lucas', 'Maximiliano', 'Matias', 'Tomas', 'Cristian'],
+    last: ['Vidal', 'Sanchez', 'Medel', 'Bravo', 'Brereton', 'Pulgar', 'Nunez', 'Davila', 'Diaz', 'Suazo', 'Cortes', 'Aravena', 'Valdes', 'Osorio', 'Tapia', 'Loyola', 'Perez', 'Palacios', 'Pizarro', 'Catalan', 'Kuscevic', 'Echeverria', 'Sierralta', 'Aranguiz', 'Isla']
+  },
+  CO: {
+    first: ['Luis', 'James', 'Jhon', 'Jefferson', 'Richard', 'Daniel', 'Camilo', 'Davinson', 'Carlos', 'Mateus', 'Yerry', 'Kevin', 'Jorge', 'Jhonatan', 'Santiago', 'Juan', 'Rafael', 'David', 'Yaser', 'Gustavo', 'Johan', 'Cristian', 'Alvaro', 'Deiver', 'Nelson'],
+    last: ['Diaz', 'Rodriguez', 'Arias', 'Lerma', 'Rios', 'Munoz', 'Vargas', 'Sanchez', 'Cuesta', 'Uribe', 'Mina', 'Castano', 'Carrascal', 'Cordoba', 'Borre', 'Quintero', 'Sinisterra', 'Ospina', 'Asprilla', 'Puerta', 'Mojica', 'Lucumi', 'Montero', 'Machado', 'Palacios']
+  },
+  PY: {
+    first: ['Julio', 'Miguel', 'Gustavo', 'Mathias', 'Diego', 'Ramon', 'Alejandro', 'Junior', 'Omar', 'Fabian', 'Roberto', 'Carlos', 'Damian', 'Adam', 'Alex', 'Angel', 'Derlis', 'Richard', 'Braian', 'Matias', 'Antonio', 'Lucas', 'Ivan', 'Hernan', 'Hugo'],
+    last: ['Enciso', 'Almiron', 'Gomez', 'Villasanti', 'Gomez', 'Sosa', 'Gamarra', 'Alonso', 'Alderete', 'Balbuena', 'Fernandez', 'Coronel', 'Bobadilla', 'Bareiro', 'Arce', 'Romero', 'Gonzalez', 'Sanchez', 'Ojeda', 'Rojas', 'Sanabria', 'Cardozo', 'Cabañas', 'Da Silva', 'Villar']
+  },
+  EC: {
+    first: ['Moises', 'Piero', 'Enner', 'Felix', 'Willian', 'Kendry', 'Angelo', 'Alan', 'Hernan', 'Carlos', 'John', 'Jeremy', 'Jhoanner', 'Kevin', 'Jose', 'Jordy', 'Pedro', 'Alexander', 'Gonzalo', 'Jhegson', 'Leonardo', 'Bryan', 'Nilson', 'Pervis', 'Romario'],
+    last: ['Caicedo', 'Hincapie', 'Valencia', 'Torres', 'Pacho', 'Paez', 'Preciado', 'Franco', 'Galindez', 'Gruezo', 'Yeboah', 'Sarmiento', 'Chavez', 'Rodriguez', 'Cifuentes', 'Caicedo', 'Ortiz', 'Dominguez', 'Plata', 'Mendez', 'Campana', 'Ramirez', 'Angulo', 'Estupinan', 'Ibarra']
+  },
+  PE: {
+    first: ['Paolo', 'Pedro', 'Renato', 'Piero', 'Bryan', 'Gianluca', 'Luis', 'Edison', 'Alexander', 'Carlos', 'Marcos', 'Sergio', 'Wilder', 'Andy', 'Oliver', 'Jesus', 'Joao', 'Jairo', 'Erick', 'Aldo', 'Franco', 'Miguel', 'Christofer', 'Christian', 'Anderson'],
+    last: ['Guerrero', 'Gallese', 'Tapia', 'Quispe', 'Reyna', 'Lapadula', 'Advincula', 'Flores', 'Callens', 'Zambrano', 'Lopez', 'Pena', 'Cartagena', 'Polo', 'Sonne', 'Castillo', 'Grimaldo', 'Concha', 'Noriega', 'Corzo', 'Navarro', 'Trauco', 'Gonzales', 'Cueva', 'Santamaria']
   }
 };
 
@@ -873,41 +258,179 @@ const PRESET_STARS = {
     { name: 'Robert Lewandowski', pos: 'ATA', age: 36, atk: 90, def: 35, pas: 78, phy: 82 },
     { name: 'Raphinha', pos: 'ATA', age: 28, atk: 86, def: 60, pas: 84, phy: 87 }
   ],
-  tottenham: [
-    { name: 'Guglielmo Vicario', pos: 'GOL', age: 28, atk: 20, def: 84, pas: 74, phy: 81 },
-    { name: 'Cristian Romero', pos: 'DEF', age: 26, atk: 48, def: 86, pas: 76, phy: 87 },
-    { name: 'Micky van de Ven', pos: 'DEF', age: 23, atk: 52, def: 85, pas: 75, phy: 91 },
-    { name: 'Pedro Porro', pos: 'DEF', age: 25, atk: 76, def: 79, pas: 82, phy: 83 },
-    { name: 'James Maddison', pos: 'MEI', age: 27, atk: 84, def: 58, pas: 88, phy: 78 },
-    { name: 'Dejan Kulusevski', pos: 'MEI', age: 24, atk: 82, def: 64, pas: 84, phy: 85 },
-    { name: 'Son Heung-min', pos: 'ATA', age: 32, atk: 89, def: 45, pas: 82, phy: 84 },
-    { name: 'Dominic Solanke', pos: 'ATA', age: 27, atk: 83, def: 38, pas: 74, phy: 85 }
+  bayern: [
+    { name: 'Manuel Neuer', pos: 'GOL', age: 38, atk: 20, def: 87, pas: 82, phy: 78 },
+    { name: 'Dayot Upamecano', pos: 'DEF', age: 26, atk: 45, def: 85, pas: 78, phy: 87 },
+    { name: 'Kim Min-jae', pos: 'DEF', age: 28, atk: 40, def: 86, pas: 74, phy: 88 },
+    { name: 'Alphonso Davies', pos: 'DEF', age: 24, atk: 78, def: 80, pas: 80, phy: 93 },
+    { name: 'Joshua Kimmich', pos: 'MEI', age: 29, atk: 78, def: 84, pas: 91, phy: 84 },
+    { name: 'Leon Goretzka', pos: 'MEI', age: 29, atk: 80, def: 81, pas: 82, phy: 88 },
+    { name: 'Jamal Musiala', pos: 'MEI', age: 21, atk: 90, def: 55, pas: 88, phy: 82 },
+    { name: 'Leroy Sané', pos: 'ATA', age: 28, atk: 86, def: 42, pas: 83, phy: 89 },
+    { name: 'Serge Gnabry', pos: 'ATA', age: 29, atk: 84, def: 45, pas: 80, phy: 85 },
+    { name: 'Harry Kane', pos: 'ATA', age: 31, atk: 93, def: 46, pas: 86, phy: 84 }
   ],
-  newcastle: [
-    { name: 'Nick Pope', pos: 'GOL', age: 32, atk: 18, def: 84, pas: 68, phy: 84 },
-    { name: 'Fabian Schär', pos: 'DEF', age: 32, atk: 54, def: 82, pas: 80, phy: 81 },
-    { name: 'Kieran Trippier', pos: 'DEF', age: 34, atk: 74, def: 80, pas: 86, phy: 78 },
-    { name: 'Bruno Guimarães', pos: 'MEI', age: 27, atk: 80, def: 84, pas: 88, phy: 86 },
-    { name: 'Joelinton', pos: 'MEI', age: 28, atk: 78, def: 82, pas: 80, phy: 89 },
-    { name: 'Alexander Isak', pos: 'ATA', age: 25, atk: 88, def: 35, pas: 78, phy: 85 },
-    { name: 'Anthony Gordon', pos: 'ATA', age: 23, atk: 84, def: 48, pas: 79, phy: 88 }
+  bayerleverkusen: [
+    { name: 'Lukáš Hrádecký', pos: 'GOL', age: 35, atk: 20, def: 84, pas: 72, phy: 78 },
+    { name: 'Jonathan Tah', pos: 'DEF', age: 28, atk: 45, def: 86, pas: 76, phy: 88 },
+    { name: 'Edmond Tapsoba', pos: 'DEF', age: 25, atk: 50, def: 84, pas: 82, phy: 86 },
+    { name: 'Álex Grimaldo', pos: 'DEF', age: 29, atk: 84, def: 78, pas: 88, phy: 80 },
+    { name: 'Jeremie Frimpong', pos: 'DEF', age: 24, atk: 82, def: 74, pas: 80, phy: 93 },
+    { name: 'Granit Xhaka', pos: 'MEI', age: 32, atk: 76, def: 85, pas: 89, phy: 84 },
+    { name: 'Exequiel Palacios', pos: 'MEI', age: 26, atk: 78, def: 83, pas: 86, phy: 84 },
+    { name: 'Florian Wirtz', pos: 'MEI', age: 21, atk: 89, def: 60, pas: 91, phy: 82 },
+    { name: 'Victor Boniface', pos: 'ATA', age: 24, atk: 86, def: 38, pas: 72, phy: 89 }
   ],
-  sevilla: [
-    { name: 'Ørjan Nyland', pos: 'GOL', age: 34, atk: 18, def: 80, pas: 70, phy: 78 },
-    { name: 'Loïc Badé', pos: 'DEF', age: 24, atk: 40, def: 82, pas: 72, phy: 84 },
-    { name: 'Jesús Navas', pos: 'DEF', age: 38, atk: 72, def: 77, pas: 80, phy: 76 },
-    { name: 'Saúl Ñíguez', pos: 'MEI', age: 30, atk: 77, def: 78, pas: 80, phy: 81 },
-    { name: 'Djibril Sow', pos: 'MEI', age: 27, atk: 74, def: 78, pas: 81, phy: 82 },
-    { name: 'Lucas Ocampos', pos: 'ATA', age: 30, atk: 82, def: 58, pas: 77, phy: 86 },
-    { name: 'Isaac Romero', pos: 'ATA', age: 24, atk: 80, def: 40, pas: 72, phy: 82 }
+  dortmund: [
+    { name: 'Gregor Kobel', pos: 'GOL', age: 27, atk: 22, def: 87, pas: 76, phy: 83 },
+    { name: 'Nico Schlotterbeck', pos: 'DEF', age: 25, atk: 52, def: 85, pas: 82, phy: 86 },
+    { name: 'Niklas Süle', pos: 'DEF', age: 29, atk: 45, def: 83, pas: 76, phy: 86 },
+    { name: 'Julian Brandt', pos: 'MEI', age: 28, atk: 84, def: 60, pas: 88, phy: 78 },
+    { name: 'Marcel Sabitzer', pos: 'MEI', age: 30, atk: 82, def: 78, pas: 84, phy: 82 },
+    { name: 'Serhou Guirassy', pos: 'ATA', age: 28, atk: 86, def: 35, pas: 74, phy: 86 },
+    { name: 'Karim Adeyemi', pos: 'ATA', age: 23, atk: 83, def: 40, pas: 76, phy: 92 }
   ],
-  villarreal: [
-    { name: 'Diego Conde', pos: 'GOL', age: 26, atk: 20, def: 81, pas: 72, phy: 79 },
-    { name: 'Raúl Albiol', pos: 'DEF', age: 39, atk: 35, def: 82, pas: 74, phy: 75 },
-    { name: 'Dani Parejo', pos: 'MEI', age: 35, atk: 76, def: 70, pas: 89, phy: 70 },
-    { name: 'Álex Baena', pos: 'MEI', age: 23, atk: 82, def: 65, pas: 87, phy: 80 },
-    { name: 'Gerard Moreno', pos: 'ATA', age: 32, atk: 86, def: 42, pas: 82, phy: 78 },
-    { name: 'Ayoze Pérez', pos: 'ATA', age: 31, atk: 83, def: 45, pas: 78, phy: 80 }
+  inter: [
+    { name: 'Yann Sommer', pos: 'GOL', age: 36, atk: 20, def: 86, pas: 80, phy: 78 },
+    { name: 'Alessandro Bastoni', pos: 'DEF', age: 25, atk: 58, def: 88, pas: 85, phy: 85 },
+    { name: 'Benjamin Pavard', pos: 'DEF', age: 28, atk: 62, def: 85, pas: 80, phy: 82 },
+    { name: 'Federico Dimarco', pos: 'DEF', age: 27, atk: 82, def: 78, pas: 87, phy: 80 },
+    { name: 'Hakan Çalhanoğlu', pos: 'MEI', age: 30, atk: 84, def: 80, pas: 90, phy: 78 },
+    { name: 'Nicolò Barella', pos: 'MEI', age: 27, atk: 83, def: 84, pas: 88, phy: 87 },
+    { name: 'Henrikh Mkhitaryan', pos: 'MEI', age: 36, atk: 80, def: 72, pas: 85, phy: 74 },
+    { name: 'Lautaro Martínez', pos: 'ATA', age: 27, atk: 90, def: 48, pas: 79, phy: 87 },
+    { name: 'Marcus Thuram', pos: 'ATA', age: 27, atk: 86, def: 44, pas: 78, phy: 88 }
+  ],
+  milan: [
+    { name: 'Mike Maignan', pos: 'GOL', age: 29, atk: 25, def: 88, pas: 82, phy: 84 },
+    { name: 'Fikayo Tomori', pos: 'DEF', age: 27, atk: 45, def: 84, pas: 74, phy: 86 },
+    { name: 'Theo Hernández', pos: 'DEF', age: 27, atk: 84, def: 80, pas: 82, phy: 90 },
+    { name: 'Tijjani Reijnders', pos: 'MEI', age: 26, atk: 82, def: 76, pas: 86, phy: 84 },
+    { name: 'Ruben Loftus-Cheek', pos: 'MEI', age: 28, atk: 80, def: 75, pas: 80, phy: 86 },
+    { name: 'Christian Pulisic', pos: 'ATA', age: 26, atk: 85, def: 45, pas: 82, phy: 84 },
+    { name: 'Rafael Leão', pos: 'ATA', age: 25, atk: 89, def: 38, pas: 81, phy: 91 },
+    { name: 'Álvaro Morata', pos: 'ATA', age: 32, atk: 84, def: 46, pas: 76, phy: 80 }
+  ],
+  juventus: [
+    { name: 'Michele Di Gregorio', pos: 'GOL', age: 27, atk: 20, def: 84, pas: 75, phy: 80 },
+    { name: 'Bremer', pos: 'DEF', age: 27, atk: 48, def: 88, pas: 72, phy: 89 },
+    { name: 'Danilo', pos: 'DEF', age: 33, atk: 68, def: 82, pas: 78, phy: 78 },
+    { name: 'Teun Koopmeiners', pos: 'MEI', age: 26, atk: 84, def: 79, pas: 86, phy: 83 },
+    { name: 'Manuel Locatelli', pos: 'MEI', age: 27, atk: 75, def: 83, pas: 84, phy: 82 },
+    { name: 'Kenan Yıldız', pos: 'ATA', age: 19, atk: 82, def: 40, pas: 80, phy: 80 },
+    { name: 'Dušan Vlahović', pos: 'ATA', age: 24, atk: 88, def: 36, pas: 72, phy: 88 }
+  ],
+  psg: [
+    { name: 'Gianluigi Donnarumma', pos: 'GOL', age: 25, atk: 22, def: 88, pas: 74, phy: 85 },
+    { name: 'Marquinhos', pos: 'DEF', age: 30, atk: 52, def: 87, pas: 80, phy: 83 },
+    { name: 'Willian Pacho', pos: 'DEF', age: 23, atk: 45, def: 83, pas: 76, phy: 85 },
+    { name: 'Achraf Hakimi', pos: 'DEF', age: 26, atk: 84, def: 81, pas: 84, phy: 91 },
+    { name: 'Nuno Mendes', pos: 'DEF', age: 22, atk: 80, def: 80, pas: 78, phy: 90 },
+    { name: 'Vitinha', pos: 'MEI', age: 24, atk: 80, def: 78, pas: 89, phy: 81 },
+    { name: 'Warren Zaïre-Emery', pos: 'MEI', age: 18, atk: 78, def: 80, pas: 84, phy: 84 },
+    { name: 'Ousmane Dembélé', pos: 'ATA', age: 27, atk: 88, def: 42, pas: 85, phy: 89 },
+    { name: 'Bradley Barcola', pos: 'ATA', age: 22, atk: 86, def: 45, pas: 80, phy: 88 }
+  ],
+  benfica: [
+    { name: 'Anatoliy Trubin', pos: 'GOL', age: 23, atk: 20, def: 84, pas: 74, phy: 82 },
+    { name: 'Nicolás Otamendi', pos: 'DEF', age: 36, atk: 48, def: 84, pas: 76, phy: 80 },
+    { name: 'António Silva', pos: 'DEF', age: 21, atk: 45, def: 83, pas: 76, phy: 83 },
+    { name: 'Orkun Kökçü', pos: 'MEI', age: 24, atk: 82, def: 74, pas: 86, phy: 80 },
+    { name: 'Florentino Luís', pos: 'MEI', age: 25, atk: 60, def: 85, pas: 82, phy: 84 },
+    { name: 'Ángel Di María', pos: 'ATA', age: 36, atk: 87, def: 45, pas: 90, phy: 72 },
+    { name: 'Vangelis Pavlidis', pos: 'ATA', age: 26, atk: 83, def: 38, pas: 74, phy: 82 }
+  ],
+  sporting: [
+    { name: 'Franco Israel', pos: 'GOL', age: 24, atk: 20, def: 81, pas: 74, phy: 78 },
+    { name: 'Gonçalo Inácio', pos: 'DEF', age: 23, atk: 55, def: 84, pas: 83, phy: 82 },
+    { name: 'Ousmane Diomande', pos: 'DEF', age: 21, atk: 45, def: 83, pas: 76, phy: 87 },
+    { name: 'Morten Hjulmand', pos: 'MEI', age: 25, atk: 72, def: 85, pas: 84, phy: 86 },
+    { name: 'Hidemasa Morita', pos: 'MEI', age: 29, atk: 75, def: 80, pas: 84, phy: 80 },
+    { name: 'Francisco Trincão', pos: 'ATA', age: 25, atk: 83, def: 46, pas: 82, phy: 80 },
+    { name: 'Viktor Gyökeres', pos: 'ATA', age: 26, atk: 90, def: 45, pas: 78, phy: 92 }
+  ],
+  porto: [
+    { name: 'Diogo Costa', pos: 'GOL', age: 25, atk: 25, def: 87, pas: 82, phy: 82 },
+    { name: 'Nehuén Pérez', pos: 'DEF', age: 24, atk: 45, def: 82, pas: 74, phy: 83 },
+    { name: 'Alan Varela', pos: 'MEI', age: 23, atk: 70, def: 84, pas: 84, phy: 84 },
+    { name: 'Nico González', pos: 'MEI', age: 23, atk: 80, def: 78, pas: 83, phy: 82 },
+    { name: 'Pepê', pos: 'ATA', age: 27, atk: 82, def: 60, pas: 80, phy: 86 },
+    { name: 'Wenderson Galeno', pos: 'ATA', age: 27, atk: 84, def: 55, pas: 78, phy: 89 },
+    { name: 'Samu Omorodion', pos: 'ATA', age: 20, atk: 84, def: 35, pas: 68, phy: 90 }
+  ],
+  riverplate: [
+    { name: 'Franco Armani', pos: 'GOL', age: 38, atk: 18, def: 83, pas: 70, phy: 76 },
+    { name: 'Germán Pezzella', pos: 'DEF', age: 33, atk: 45, def: 83, pas: 74, phy: 82 },
+    { name: 'Marcos Acuña', pos: 'DEF', age: 33, atk: 76, def: 82, pas: 82, phy: 84 },
+    { name: 'Santiago Simón', pos: 'MEI', age: 22, atk: 75, def: 74, pas: 80, phy: 80 },
+    { name: 'Franco Mastantuono', pos: 'MEI', age: 17, atk: 82, def: 50, pas: 83, phy: 76 },
+    { name: 'Facundo Colidio', pos: 'ATA', age: 24, atk: 79, def: 42, pas: 75, phy: 80 },
+    { name: 'Miguel Borja', pos: 'ATA', age: 31, atk: 85, def: 36, pas: 72, phy: 86 }
+  ],
+  bocajuniors: [
+    { name: 'Sergio Romero', pos: 'GOL', age: 37, atk: 18, def: 82, pas: 72, phy: 76 },
+    { name: 'Marcos Rojo', pos: 'DEF', age: 34, atk: 55, def: 82, pas: 74, phy: 83 },
+    { name: 'Luis Advíncula', pos: 'DEF', age: 34, atk: 75, def: 78, pas: 75, phy: 88 },
+    { name: 'Kevin Zenón', pos: 'MEI', age: 23, atk: 81, def: 72, pas: 82, phy: 82 },
+    { name: 'Cristian Medina', pos: 'MEI', age: 22, atk: 78, def: 76, pas: 82, phy: 82 },
+    { name: 'Miguel Merentiel', pos: 'ATA', age: 28, atk: 82, def: 50, pas: 74, phy: 84 },
+    { name: 'Edinson Cavani', pos: 'ATA', age: 37, atk: 86, def: 45, pas: 78, phy: 80 }
+  ],
+  penarol: [
+    { name: 'Washington Aguerre', pos: 'GOL', age: 31, atk: 18, def: 78, pas: 68, phy: 78 },
+    { name: 'Guzmán Rodríguez', pos: 'DEF', age: 24, atk: 40, def: 78, pas: 70, phy: 82 },
+    { name: 'Damián García', pos: 'MEI', age: 21, atk: 65, def: 78, pas: 79, phy: 80 },
+    { name: 'Leonardo Fernández', pos: 'MEI', age: 26, atk: 84, def: 55, pas: 86, phy: 78 },
+    { name: 'Eduardo Darias', pos: 'MEI', age: 26, atk: 75, def: 72, pas: 76, phy: 80 },
+    { name: 'Maximiliano Silvera', pos: 'ATA', age: 27, atk: 81, def: 40, pas: 70, phy: 82 }
+  ],
+  colocolo: [
+    { name: 'Brayan Cortés', pos: 'GOL', age: 29, atk: 20, def: 81, pas: 72, phy: 78 },
+    { name: 'Maximiliano Falcón', pos: 'DEF', age: 27, atk: 45, def: 80, pas: 70, phy: 84 },
+    { name: 'Arturo Vidal', pos: 'MEI', age: 37, atk: 82, def: 80, pas: 84, phy: 82 },
+    { name: 'Esteban Pavez', pos: 'MEI', age: 34, atk: 68, def: 79, pas: 78, phy: 80 },
+    { name: 'Carlos Palacios', pos: 'ATA', age: 24, atk: 83, def: 42, pas: 80, phy: 80 },
+    { name: 'Javier Correa', pos: 'ATA', age: 32, atk: 80, def: 35, pas: 70, phy: 80 }
+  ],
+  atletico_nacional: [
+    { name: 'David Ospina', pos: 'GOL', age: 36, atk: 18, def: 82, pas: 74, phy: 76 },
+    { name: 'William Tesillo', pos: 'DEF', age: 34, atk: 45, def: 80, pas: 75, phy: 80 },
+    { name: 'Jorman Campuzano', pos: 'MEI', age: 28, atk: 66, def: 80, pas: 80, phy: 82 },
+    { name: 'Edwin Cardona', pos: 'MEI', age: 32, atk: 83, def: 50, pas: 86, phy: 76 },
+    { name: 'Marino Hinestroza', pos: 'ATA', age: 22, atk: 80, def: 40, pas: 75, phy: 86 },
+    { name: 'Alfredo Morelos', pos: 'ATA', age: 28, atk: 83, def: 38, pas: 70, phy: 86 }
+  ],
+  olimpia: [
+    { name: 'Gastón Olveira', pos: 'GOL', age: 31, atk: 18, def: 81, pas: 70, phy: 78 },
+    { name: 'Saúl Salcedo', pos: 'DEF', age: 27, atk: 42, def: 78, pas: 70, phy: 82 },
+    { name: 'Richard Ortiz', pos: 'MEI', age: 34, atk: 72, def: 79, pas: 76, phy: 82 },
+    { name: 'Derlis González', pos: 'ATA', age: 30, atk: 82, def: 45, pas: 78, phy: 82 },
+    { name: 'Lucas Pratto', pos: 'ATA', age: 36, atk: 80, def: 45, pas: 75, phy: 82 }
+  ],
+  ldu_quito: [
+    { name: 'Alexander Domínguez', pos: 'GOL', age: 37, atk: 18, def: 82, pas: 70, phy: 80 },
+    { name: 'Ricardo Adé', pos: 'DEF', age: 34, atk: 42, def: 81, pas: 70, phy: 85 },
+    { name: 'Ezequiel Piovi', pos: 'MEI', age: 32, atk: 72, def: 80, pas: 82, phy: 82 },
+    { name: 'Fernando Cornejo', pos: 'MEI', age: 28, atk: 76, def: 75, pas: 78, phy: 80 },
+    { name: 'Alex Arce', pos: 'ATA', age: 29, atk: 84, def: 35, pas: 70, phy: 85 }
+  ],
+  universitario: [
+    { name: 'Sebastián Britos', pos: 'GOL', age: 34, atk: 18, def: 79, pas: 68, phy: 78 },
+    { name: 'Aldo Corzo', pos: 'DEF', age: 35, atk: 58, def: 79, pas: 72, phy: 78 },
+    { name: 'Rodrigo Ureña', pos: 'MEI', age: 31, atk: 70, def: 80, pas: 80, phy: 82 },
+    { name: 'Martín Pérez Guedes', pos: 'MEI', age: 33, atk: 78, def: 70, pas: 78, phy: 78 },
+    { name: 'Andy Polo', pos: 'ATA', age: 30, atk: 80, def: 60, pas: 78, phy: 86 },
+    { name: 'Edison Flores', pos: 'ATA', age: 30, atk: 82, def: 52, pas: 80, phy: 78 },
+    { name: 'Alex Valera', pos: 'ATA', age: 28, atk: 81, def: 38, pas: 68, phy: 82 }
+  ],
+  alianza_lima: [
+    { name: 'Ángelo Campos', pos: 'GOL', age: 31, atk: 18, def: 79, pas: 70, phy: 78 },
+    { name: 'Carlos Zambrano', pos: 'DEF', age: 35, atk: 52, def: 81, pas: 74, phy: 82 },
+    { name: 'Erick Noriega', pos: 'DEF', age: 23, atk: 45, def: 78, pas: 72, phy: 80 },
+    { name: 'Sebastián Rodríguez', pos: 'MEI', age: 32, atk: 78, def: 72, pas: 83, phy: 76 },
+    { name: 'Kevin Serna', pos: 'ATA', age: 27, atk: 81, def: 48, pas: 76, phy: 88 },
+    { name: 'Hernán Barcos', pos: 'ATA', age: 40, atk: 82, def: 36, pas: 76, phy: 74 },
+    { name: 'Paolo Guerrero', pos: 'ATA', age: 41, atk: 82, def: 35, pas: 75, phy: 74 }
   ]
 };
 

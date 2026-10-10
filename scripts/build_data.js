@@ -1,0 +1,570 @@
+import fs from 'fs';
+import path from 'path';
+
+const NATIONALITIES = [
+  { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
+  { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
+  { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+  { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
+  { code: 'EN', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { code: 'IT', name: 'Itália', flag: '🇮🇹' },
+  { code: 'DE', name: 'Alemanha', flag: '🇩🇪' },
+  { code: 'FR', name: 'França', flag: '🇫🇷' },
+  { code: 'UY', name: 'Uruguai', flag: '🇺🇾' },
+  { code: 'CL', name: 'Chile', flag: '🇨🇱' },
+  { code: 'CO', name: 'Colômbia', flag: '🇨🇴' },
+  { code: 'PY', name: 'Paraguai', flag: '🇵🇾' },
+  { code: 'EC', name: 'Equador', flag: '🇪🇨' },
+  { code: 'PE', name: 'Peru', flag: '🇵🇪' }
+];
+
+// Definition of 14 leagues with 20 clubs each (total 280 clubs)
+const leagues = [
+  {
+    id: 'bra_serie_a',
+    name: 'Brasileirão Série A',
+    country: 'Brasil',
+    countryCode: 'BR',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇧🇷',
+    currencySymbol: 'R$',
+    rounds: 38,
+    reputation: 4,
+    description: 'A elite do futebol brasileiro. Muito equilíbrio, clássicos históricos e alta competitividade.'
+  },
+  {
+    id: 'eng_premier',
+    name: 'Premier League',
+    country: 'Inglaterra',
+    countryCode: 'EN',
+    continent: 'EU',
+    eligibleTournament: 'champions_league',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    currencySymbol: '£',
+    rounds: 38,
+    reputation: 5,
+    description: 'A liga mais rica do mundo, com orçamentos astronômicos e astros internacionais.'
+  },
+  {
+    id: 'esp_la_liga',
+    name: 'La Liga',
+    country: 'Espanha',
+    countryCode: 'ES',
+    continent: 'EU',
+    eligibleTournament: 'champions_league',
+    flag: '🇪🇸',
+    currencySymbol: '€',
+    rounds: 38,
+    reputation: 5,
+    description: 'O campeonato espanhol, marcado pela técnica refinada, posse de bola e gigantes mundiais.'
+  },
+  {
+    id: 'ger_bundesliga',
+    name: 'Bundesliga',
+    country: 'Alemanha',
+    countryCode: 'DE',
+    continent: 'EU',
+    eligibleTournament: 'champions_league',
+    flag: '🇩🇪',
+    currencySymbol: '€',
+    rounds: 38,
+    reputation: 5,
+    description: 'O futebol alemão, famoso por estádios lotados, intensidade ofensiva e organização tática.'
+  },
+  {
+    id: 'ita_serie_a',
+    name: 'Serie A',
+    country: 'Itália',
+    countryCode: 'IT',
+    continent: 'EU',
+    eligibleTournament: 'champions_league',
+    flag: '🇮🇹',
+    currencySymbol: '€',
+    rounds: 38,
+    reputation: 5,
+    description: 'O tradicional Calcio italiano, sinônimo de rigor tático, solidez defensiva e paixão.'
+  },
+  {
+    id: 'fra_ligue_1',
+    name: 'Ligue 1',
+    country: 'França',
+    countryCode: 'FR',
+    continent: 'EU',
+    eligibleTournament: 'champions_league',
+    flag: '🇫🇷',
+    currencySymbol: '€',
+    rounds: 38,
+    reputation: 4,
+    description: 'A elite francesa, reveladora de talentos mundiais, jogo físico de alta velocidade e técnica.'
+  },
+  {
+    id: 'por_primeira_liga',
+    name: 'Primeira Liga',
+    country: 'Portugal',
+    countryCode: 'PT',
+    continent: 'EU',
+    eligibleTournament: 'champions_league',
+    flag: '🇵🇹',
+    currencySymbol: '€',
+    rounds: 38,
+    reputation: 4,
+    description: 'O campeonato português, celeiro histórico de craques e ponta de lança do futebol europeu.'
+  },
+  {
+    id: 'arg_primera_division',
+    name: 'Liga Profesional',
+    country: 'Argentina',
+    countryCode: 'AR',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇦🇷',
+    currencySymbol: '$',
+    rounds: 38,
+    reputation: 4,
+    description: 'A mística do futebol argentino, marcada pela garra, técnica vibrante e torcidas fervorosas.'
+  },
+  {
+    id: 'uru_primera_division',
+    name: 'Campeonato Uruguayo',
+    country: 'Uruguai',
+    countryCode: 'UY',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇺🇾',
+    currencySymbol: '$U',
+    rounds: 38,
+    reputation: 3,
+    description: 'A lendária garra charrúa do futebol uruguaio, repleta de história e rivalidade centenária.'
+  },
+  {
+    id: 'chi_primera_division',
+    name: 'Primera División de Chile',
+    country: 'Chile',
+    countryCode: 'CL',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇨🇱',
+    currencySymbol: 'CL$',
+    rounds: 38,
+    reputation: 3,
+    description: 'A elite do futebol chileno, com clássicos intensos do Pacífico e equipes tradicionais.'
+  },
+  {
+    id: 'col_primera_a',
+    name: 'Liga BetPlay Dimayor',
+    country: 'Colômbia',
+    countryCode: 'CO',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇨🇴',
+    currencySymbol: 'COL$',
+    rounds: 38,
+    reputation: 3,
+    description: 'O futebol colombiano com ritmo envolvente, atacantes velozes e forte presença regional.'
+  },
+  {
+    id: 'par_primera_division',
+    name: 'División de Honor',
+    country: 'Paraguai',
+    countryCode: 'PY',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇵🇾',
+    currencySymbol: '₲',
+    rounds: 38,
+    reputation: 3,
+    description: 'A tradição paraguaia de jogo aéreo impecável, imposição física e clássicos da capital.'
+  },
+  {
+    id: 'ecu_serie_a',
+    name: 'LigaPro Serie A',
+    country: 'Equador',
+    countryCode: 'EC',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇪🇨',
+    currencySymbol: '$',
+    rounds: 38,
+    reputation: 3,
+    description: 'O futebol equatoriano, potência emergente continental na altitude e no litoral.'
+  },
+  {
+    id: 'per_primera_division',
+    name: 'Liga 1 Te Apuesto',
+    country: 'Peru',
+    countryCode: 'PE',
+    continent: 'SA',
+    eligibleTournament: 'libertadores',
+    flag: '🇵🇪',
+    currencySymbol: 'S/',
+    rounds: 38,
+    reputation: 3,
+    description: 'A elite peruana, misturando o toque curto refinado com desafios geográficos imponentes.'
+  }
+];
+
+// Definition of all 20 clubs per league (280 clubs in total)
+const clubsByLeague = {
+  bra_serie_a: [
+    { id: 'fla', name: 'Flamengo', shortName: 'FLA', city: 'Rio de Janeiro', president: 'Rodolfo Landim', primaryColor: '#c3281c', secondaryColor: '#111111', reputation: 5, budget: 85000000, wageBudget: 4200000, expectation: 'Campeão da Liga', overall: 82, stadium: 'Maracanã', stadiumCapacity: 78838 },
+    { id: 'pal', name: 'Palmeiras', shortName: 'PAL', city: 'São Paulo', president: 'Leila Pereira', primaryColor: '#006437', secondaryColor: '#ffffff', reputation: 5, budget: 78000000, wageBudget: 3900000, expectation: 'Campeão da Liga', overall: 81, stadium: 'Allianz Parque', stadiumCapacity: 43713 },
+    { id: 'atletico_mg', name: 'Atlético Mineiro', shortName: 'CAM', city: 'Belo Horizonte', president: 'Sérgio Coelho', primaryColor: '#111111', secondaryColor: '#ffffff', reputation: 4, budget: 45000000, wageBudget: 2800000, expectation: 'Vaga na Libertadores', overall: 78, stadium: 'Arena MRV', stadiumCapacity: 46000 },
+    { id: 'sao_paulo', name: 'São Paulo', shortName: 'SAO', city: 'São Paulo', president: 'Julio Casares', primaryColor: '#cf152b', secondaryColor: '#ffffff', reputation: 4, budget: 38000000, wageBudget: 2600000, expectation: 'Vaga na Libertadores', overall: 77, stadium: 'Morumbi', stadiumCapacity: 66795 },
+    { id: 'botafogo', name: 'Botafogo', shortName: 'BOT', city: 'Rio de Janeiro', president: 'John Textor', primaryColor: '#1c1c1c', secondaryColor: '#ffffff', reputation: 4, budget: 52000000, wageBudget: 3100000, expectation: 'Vaga na Libertadores', overall: 78, stadium: 'Nilton Santos', stadiumCapacity: 44661 },
+    { id: 'fluminense', name: 'Fluminense', shortName: 'FLU', city: 'Rio de Janeiro', president: 'Mário Bittencourt', primaryColor: '#7a192c', secondaryColor: '#006144', reputation: 4, budget: 32000000, wageBudget: 2400000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Maracanã', stadiumCapacity: 78838 },
+    { id: 'gremio', name: 'Grêmio', shortName: 'GRE', city: 'Porto Alegre', president: 'Alberto Guerra', primaryColor: '#0d80bf', secondaryColor: '#ffffff', reputation: 4, budget: 30000000, wageBudget: 2300000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Arena do Grêmio', stadiumCapacity: 55662 },
+    { id: 'internacional', name: 'Internacional', shortName: 'INT', city: 'Porto Alegre', president: 'Alessandro Barcellos', primaryColor: '#cc092f', secondaryColor: '#ffffff', reputation: 4, budget: 34000000, wageBudget: 2500000, expectation: 'Vaga na Libertadores', overall: 77, stadium: 'Beira-Rio', stadiumCapacity: 50128 },
+    { id: 'corinthians', name: 'Corinthians', shortName: 'COR', city: 'São Paulo', president: 'Augusto Melo', primaryColor: '#ffffff', secondaryColor: '#111111', reputation: 4, budget: 35000000, wageBudget: 2700000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Neo Química Arena', stadiumCapacity: 49205 },
+    { id: 'cruzeiro', name: 'Cruzeiro', shortName: 'CRU', city: 'Belo Horizonte', president: 'Pedro Lourenço', primaryColor: '#004185', secondaryColor: '#ffffff', reputation: 4, budget: 40000000, wageBudget: 2600000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Mineirão', stadiumCapacity: 61846 },
+    { id: 'vasco', name: 'Vasco da Gama', shortName: 'VAS', city: 'Rio de Janeiro', president: 'Pedrinho', primaryColor: '#111111', secondaryColor: '#ffffff', reputation: 3, budget: 25000000, wageBudget: 1900000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'São Januário', stadiumCapacity: 21880 },
+    { id: 'fortaleza', name: 'Fortaleza', shortName: 'FOR', city: 'Fortaleza', president: 'Marcelo Paz', primaryColor: '#114084', secondaryColor: '#d61d2d', reputation: 3, budget: 28000000, wageBudget: 1800000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Castelão', stadiumCapacity: 63903 },
+    { id: 'bahia', name: 'Bahia', shortName: 'BAH', city: 'Salvador', president: 'Raul Aguirre', primaryColor: '#0055a5', secondaryColor: '#e31b23', reputation: 3, budget: 35000000, wageBudget: 2200000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Arena Fonte Nova', stadiumCapacity: 48000 },
+    { id: 'athletico_pr', name: 'Athletico Paranaense', shortName: 'CAP', city: 'Curitiba', president: 'Mario Celso Petraglia', primaryColor: '#c8102e', secondaryColor: '#111111', reputation: 3, budget: 32000000, wageBudget: 2000000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Ligga Arena', stadiumCapacity: 42372 },
+    { id: 'bragantino', name: 'Red Bull Bragantino', shortName: 'RBB', city: 'Bragança Paulista', president: 'Thiago Scuro', primaryColor: '#ffffff', secondaryColor: '#d11a2a', reputation: 3, budget: 30000000, wageBudget: 1900000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Nabi Abi Chedid', stadiumCapacity: 17128 },
+    { id: 'santos', name: 'Santos FC', shortName: 'SAN', city: 'Santos', president: 'Marcelo Teixeira', primaryColor: '#ffffff', secondaryColor: '#111111', reputation: 4, budget: 26000000, wageBudget: 1800000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Vila Belmiro', stadiumCapacity: 16068 },
+    { id: 'juventude', name: 'Juventude', shortName: 'JUV', city: 'Caxias do Sul', president: 'Fábio Pizzamiglio', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 16000000, wageBudget: 1200000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Alfredo Jaconi', stadiumCapacity: 19924 },
+    { id: 'vitoria', name: 'Vitória', shortName: 'VIT', city: 'Salvador', president: 'Fábio Mota', primaryColor: '#c8102e', secondaryColor: '#111111', reputation: 2, budget: 18000000, wageBudget: 1300000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Barradão', stadiumCapacity: 30793 },
+    { id: 'criciuma', name: 'Criciúma', shortName: 'CRI', city: 'Criciúma', president: 'Vilmar Guedes', primaryColor: '#fdd116', secondaryColor: '#111111', reputation: 2, budget: 15000000, wageBudget: 1100000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Heriberto Hülse', stadiumCapacity: 19225 },
+    { id: 'atletico_go', name: 'Atlético Goianiense', shortName: 'ACG', city: 'Goiânia', president: 'Adson Batista', primaryColor: '#c8102e', secondaryColor: '#111111', reputation: 2, budget: 15000000, wageBudget: 1100000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Antônio Accioly', stadiumCapacity: 12500 }
+  ],
+  eng_premier: [
+    { id: 'mancity', name: 'Manchester City', shortName: 'MCI', city: 'Manchester', president: 'Khaldoon Al Mubarak', primaryColor: '#6cabdd', secondaryColor: '#ffffff', reputation: 5, budget: 120000000, wageBudget: 6500000, expectation: 'Campeão da Liga', overall: 86, stadium: 'Etihad Stadium', stadiumCapacity: 53400 },
+    { id: 'arsenal', name: 'Arsenal', shortName: 'ARS', city: 'Londres', president: 'Stan Kroenke', primaryColor: '#db0007', secondaryColor: '#ffffff', reputation: 5, budget: 95000000, wageBudget: 5200000, expectation: 'Campeão da Liga', overall: 84, stadium: 'Emirates Stadium', stadiumCapacity: 60704 },
+    { id: 'liverpool', name: 'Liverpool', shortName: 'LIV', city: 'Liverpool', president: 'Tom Werner', primaryColor: '#c8102e', secondaryColor: '#ffffff', reputation: 5, budget: 90000000, wageBudget: 5100000, expectation: 'Campeão da Liga', overall: 84, stadium: 'Anfield', stadiumCapacity: 61276 },
+    { id: 'chelsea', name: 'Chelsea', shortName: 'CHE', city: 'Londres', president: 'Todd Boehly', primaryColor: '#034694', secondaryColor: '#ffffff', reputation: 4, budget: 85000000, wageBudget: 4800000, expectation: 'Vaga na Champions League', overall: 81, stadium: 'Stamford Bridge', stadiumCapacity: 40343 },
+    { id: 'manutd', name: 'Manchester United', shortName: 'MUN', city: 'Manchester', president: 'Sir Jim Ratcliffe', primaryColor: '#da291c', secondaryColor: '#ffffff', reputation: 4, budget: 80000000, wageBudget: 5000000, expectation: 'Vaga na Champions League', overall: 80, stadium: 'Old Trafford', stadiumCapacity: 74310 },
+    { id: 'tottenham', name: 'Tottenham', shortName: 'TOT', city: 'Londres', president: 'Daniel Levy', primaryColor: '#132257', secondaryColor: '#ffffff', reputation: 4, budget: 75000000, wageBudget: 4600000, expectation: 'Vaga na Champions League', overall: 81, stadium: 'Tottenham Stadium', stadiumCapacity: 62850 },
+    { id: 'newcastle', name: 'Newcastle United', shortName: 'NEW', city: 'Newcastle', president: 'Yasir Al-Rumayyan', primaryColor: '#241f20', secondaryColor: '#ffffff', reputation: 4, budget: 70000000, wageBudget: 4200000, expectation: 'Vaga nas Copas Europeias', overall: 80, stadium: "St. James' Park", stadiumCapacity: 52305 },
+    { id: 'astonvilla', name: 'Aston Villa', shortName: 'AVL', city: 'Birmingham', president: 'Nassef Sawiris', primaryColor: '#670e36', secondaryColor: '#95bfe5', reputation: 4, budget: 50000000, wageBudget: 3200000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'Villa Park', stadiumCapacity: 42682 },
+    { id: 'brighton', name: 'Brighton', shortName: 'BHA', city: 'Brighton', president: 'Tony Bloom', primaryColor: '#0057b8', secondaryColor: '#ffcd00', reputation: 3, budget: 42000000, wageBudget: 2800000, expectation: 'Metade Superior da Tabela', overall: 77, stadium: 'Amex Stadium', stadiumCapacity: 31800 },
+    { id: 'westham', name: 'West Ham', shortName: 'WHU', city: 'Londres', president: 'David Sullivan', primaryColor: '#7a263a', secondaryColor: '#1bb1e7', reputation: 3, budget: 45000000, wageBudget: 3000000, expectation: 'Metade Superior da Tabela', overall: 77, stadium: 'London Stadium', stadiumCapacity: 62500 },
+    { id: 'everton', name: 'Everton', shortName: 'EVE', city: 'Liverpool', president: 'Farhad Moshiri', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 3, budget: 35000000, wageBudget: 2500000, expectation: 'Evitar Rebaixamento', overall: 75, stadium: 'Goodison Park', stadiumCapacity: 39572 },
+    { id: 'wolves', name: 'Wolverhampton', shortName: 'WOL', city: 'Wolverhampton', president: 'Jeff Shi', primaryColor: '#fdb913', secondaryColor: '#231f20', reputation: 3, budget: 36000000, wageBudget: 2400000, expectation: 'Evitar Rebaixamento', overall: 75, stadium: 'Molineux Stadium', stadiumCapacity: 32050 },
+    { id: 'fulham', name: 'Fulham', shortName: 'FUL', city: 'Londres', president: 'Shahid Khan', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 3, budget: 40000000, wageBudget: 2700000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Craven Cottage', stadiumCapacity: 25700 },
+    { id: 'brentford', name: 'Brentford', shortName: 'BRE', city: 'Londres', president: 'Matthew Benham', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 38000000, wageBudget: 2500000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Gtech Community Stadium', stadiumCapacity: 17250 },
+    { id: 'crystalpalace', name: 'Crystal Palace', shortName: 'CRY', city: 'Londres', president: 'Steve Parish', primaryColor: '#1b458f', secondaryColor: '#c4122e', reputation: 3, budget: 38000000, wageBudget: 2500000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Selhurst Park', stadiumCapacity: 25486 },
+    { id: 'bournemouth', name: 'Bournemouth', shortName: 'BOU', city: 'Bournemouth', president: 'Bill Foley', primaryColor: '#da291c', secondaryColor: '#000000', reputation: 3, budget: 35000000, wageBudget: 2300000, expectation: 'Evitar Rebaixamento', overall: 75, stadium: 'Vitality Stadium', stadiumCapacity: 11307 },
+    { id: 'nottingham', name: 'Nottingham Forest', shortName: 'NFO', city: 'Nottingham', president: 'Evangelos Marinakis', primaryColor: '#dd0000', secondaryColor: '#ffffff', reputation: 3, budget: 36000000, wageBudget: 2400000, expectation: 'Evitar Rebaixamento', overall: 75, stadium: 'City Ground', stadiumCapacity: 30445 },
+    { id: 'leicester', name: 'Leicester City', shortName: 'LEI', city: 'Leicester', president: 'Aiyawatt Srivaddhanaprabha', primaryColor: '#003090', secondaryColor: '#fdbe11', reputation: 3, budget: 32000000, wageBudget: 2200000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'King Power Stadium', stadiumCapacity: 32261 },
+    { id: 'southampton', name: 'Southampton', shortName: 'SOU', city: 'Southampton', president: 'Henrik Kraft', primaryColor: '#d71920', secondaryColor: '#ffffff', reputation: 3, budget: 28000000, wageBudget: 2000000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'St Mary Stadium', stadiumCapacity: 32384 },
+    { id: 'ipswich', name: 'Ipswich Town', shortName: 'IPS', city: 'Ipswich', president: 'Mark Ashton', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 25000000, wageBudget: 1800000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Portman Road', stadiumCapacity: 29673 }
+  ],
+  esp_la_liga: [
+    { id: 'realmadrid', name: 'Real Madrid', shortName: 'RMA', city: 'Madrid', president: 'Florentino Pérez', primaryColor: '#eeeee0', secondaryColor: '#00529f', reputation: 5, budget: 130000000, wageBudget: 7000000, expectation: 'Campeão da Liga', overall: 87, stadium: 'Santiago Bernabéu', stadiumCapacity: 84000 },
+    { id: 'barcelona', name: 'Barcelona', shortName: 'BAR', city: 'Barcelona', president: 'Joan Laporta', primaryColor: '#a50044', secondaryColor: '#004d98', reputation: 5, budget: 65000000, wageBudget: 5500000, expectation: 'Campeão da Liga', overall: 84, stadium: 'Camp Nou', stadiumCapacity: 99354 },
+    { id: 'atleticomadrid', name: 'Atlético de Madrid', shortName: 'ATM', city: 'Madrid', president: 'Enrique Cerezo', primaryColor: '#cb3524', secondaryColor: '#272e61', reputation: 4, budget: 60000000, wageBudget: 4200000, expectation: 'Vaga na Champions League', overall: 82, stadium: 'Metropolitano', stadiumCapacity: 70460 },
+    { id: 'athleticbilbao', name: 'Athletic Bilbao', shortName: 'ATH', city: 'Bilbao', president: 'Jon Uriarte', primaryColor: '#ee2524', secondaryColor: '#ffffff', reputation: 4, budget: 32000000, wageBudget: 2200000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'San Mamés', stadiumCapacity: 53289 },
+    { id: 'realsociedad', name: 'Real Sociedad', shortName: 'RSO', city: 'San Sebastián', president: 'Jokin Aperribay', primaryColor: '#0067b1', secondaryColor: '#ffffff', reputation: 4, budget: 35000000, wageBudget: 2400000, expectation: 'Vaga nas Copas Europeias', overall: 78, stadium: 'Reale Arena', stadiumCapacity: 39313 },
+    { id: 'realbetis', name: 'Real Betis', shortName: 'BET', city: 'Sevilha', president: 'Ángel Haro', primaryColor: '#0bb364', secondaryColor: '#ffffff', reputation: 4, budget: 28000000, wageBudget: 2100000, expectation: 'Metade Superior da Tabela', overall: 78, stadium: 'Benito Villamarín', stadiumCapacity: 60721 },
+    { id: 'villarreal', name: 'Villarreal', shortName: 'VIL', city: 'Vila-real', president: 'Fernando Roig', primaryColor: '#f5e300', secondaryColor: '#00529f', reputation: 4, budget: 38000000, wageBudget: 2700000, expectation: 'Vaga nas Copas Europeias', overall: 78, stadium: 'Estadio de la Cerámica', stadiumCapacity: 23500 },
+    { id: 'sevilla', name: 'Sevilla FC', shortName: 'SEV', city: 'Sevilha', president: 'José María del Nido', primaryColor: '#d4001f', secondaryColor: '#ffffff', reputation: 4, budget: 40000000, wageBudget: 2900000, expectation: 'Metade Superior da Tabela', overall: 78, stadium: 'Ramón Sánchez-Pizjuán', stadiumCapacity: 43883 },
+    { id: 'valencia', name: 'Valencia CF', shortName: 'VAL', city: 'Valência', president: 'Peter Lim', primaryColor: '#ffffff', secondaryColor: '#ee3524', reputation: 3, budget: 30000000, wageBudget: 2300000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Mestalla', stadiumCapacity: 49430 },
+    { id: 'celta', name: 'Celta de Vigo', shortName: 'CEL', city: 'Vigo', president: 'Marián Mouriño', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 3, budget: 26000000, wageBudget: 2000000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Abanca-Balaídos', stadiumCapacity: 24870 },
+    { id: 'osasuna', name: 'Osasuna', shortName: 'OSA', city: 'Pamplona', president: 'Luis Sabalza', primaryColor: '#c8102e', secondaryColor: '#0a2240', reputation: 3, budget: 24000000, wageBudget: 1900000, expectation: 'Evitar Rebaixamento', overall: 75, stadium: 'El Sadar', stadiumCapacity: 23576 },
+    { id: 'mallorca', name: 'Mallorca', shortName: 'MLL', city: 'Palma', president: 'Andy Kohlberg', primaryColor: '#e20613', secondaryColor: '#000000', reputation: 3, budget: 22000000, wageBudget: 1800000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Son Moix', stadiumCapacity: 23142 },
+    { id: 'girona', name: 'Girona FC', shortName: 'GIR', city: 'Girona', president: 'Delfí Geli', primaryColor: '#d4001f', secondaryColor: '#ffffff', reputation: 3, budget: 36000000, wageBudget: 2500000, expectation: 'Vaga nas Copas Europeias', overall: 78, stadium: 'Montilivi', stadiumCapacity: 14624 },
+    { id: 'getafe', name: 'Getafe CF', shortName: 'GET', city: 'Getafe', president: 'Ángel Torres', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 3, budget: 22000000, wageBudget: 1700000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Coliseum', stadiumCapacity: 16500 },
+    { id: 'rayovallecano', name: 'Rayo Vallecano', shortName: 'RAY', city: 'Madrid', president: 'Raúl Martín Presa', primaryColor: '#ffffff', secondaryColor: '#d4001f', reputation: 3, budget: 21000000, wageBudget: 1600000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Campo de Vallecas', stadiumCapacity: 14708 },
+    { id: 'alaves', name: 'Deportivo Alavés', shortName: 'ALA', city: 'Vitoria-Gasteiz', president: 'Alfonso Fernández', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 20000000, wageBudget: 1500000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Mendizorrotza', stadiumCapacity: 19840 },
+    { id: 'laspalmas', name: 'UD Las Palmas', shortName: 'LPA', city: 'Las Palmas', president: 'Miguel Ángel Ramírez', primaryColor: '#fdd116', secondaryColor: '#003399', reputation: 2, budget: 19000000, wageBudget: 1500000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Gran Canaria', stadiumCapacity: 32400 },
+    { id: 'espanyol', name: 'RCD Espanyol', shortName: 'ESP', city: 'Barcelona', president: 'Chen Yansheng', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 3, budget: 20000000, wageBudget: 1600000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Stage Front Stadium', stadiumCapacity: 40000 },
+    { id: 'valladolid', name: 'Real Valladolid', shortName: 'VLL', city: 'Valladolid', president: 'Ronaldo Nazário', primaryColor: '#5c2d91', secondaryColor: '#ffffff', reputation: 2, budget: 18000000, wageBudget: 1400000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'José Zorrilla', stadiumCapacity: 27618 },
+    { id: 'leganes', name: 'CD Leganés', shortName: 'LEG', city: 'Leganés', president: 'Jeff Luhnow', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 2, budget: 17000000, wageBudget: 1300000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Butarque', stadiumCapacity: 12450 }
+  ],
+  ger_bundesliga: [
+    { id: 'bayern', name: 'Bayern de Munique', shortName: 'FCB', city: 'Munique', president: 'Herbert Hainer', primaryColor: '#dc052d', secondaryColor: '#ffffff', reputation: 5, budget: 110000000, wageBudget: 6200000, expectation: 'Campeão da Liga', overall: 86, stadium: 'Allianz Arena', stadiumCapacity: 75000 },
+    { id: 'bayerleverkusen', name: 'Bayer Leverkusen', shortName: 'B04', city: 'Leverkusen', president: 'Fernando Carro', primaryColor: '#e32219', secondaryColor: '#000000', reputation: 4, budget: 75000000, wageBudget: 4500000, expectation: 'Campeão da Liga', overall: 84, stadium: 'BayArena', stadiumCapacity: 30210 },
+    { id: 'dortmund', name: 'Borussia Dortmund', shortName: 'BVB', city: 'Dortmund', president: 'Hans-Joachim Watzke', primaryColor: '#fde100', secondaryColor: '#000000', reputation: 4, budget: 70000000, wageBudget: 4400000, expectation: 'Vaga na Champions League', overall: 83, stadium: 'Signal Iduna Park', stadiumCapacity: 81365 },
+    { id: 'rbleipzig', name: 'RB Leipzig', shortName: 'RBL', city: 'Leipzig', president: 'Oliver Mintzlaff', primaryColor: '#ffffff', secondaryColor: '#ed1c24', reputation: 4, budget: 65000000, wageBudget: 4000000, expectation: 'Vaga na Champions League', overall: 82, stadium: 'Red Bull Arena', stadiumCapacity: 47069 },
+    { id: 'eintracht', name: 'Eintracht Frankfurt', shortName: 'SGE', city: 'Frankfurt', president: 'Markus Krösche', primaryColor: '#e1000f', secondaryColor: '#000000', reputation: 4, budget: 45000000, wageBudget: 2800000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'Deutsche Bank Park', stadiumCapacity: 58000 },
+    { id: 'stuttgart', name: 'VfB Stuttgart', shortName: 'VFB', city: 'Stuttgart', president: 'Alexander Wehrle', primaryColor: '#ffffff', secondaryColor: '#e32219', reputation: 3, budget: 42000000, wageBudget: 2700000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'MHPArena', stadiumCapacity: 60449 },
+    { id: 'wolfsburg', name: 'VfL Wolfsburg', shortName: 'WOB', city: 'Wolfsburg', president: 'Peter Christiansen', primaryColor: '#65b32e', secondaryColor: '#ffffff', reputation: 3, budget: 40000000, wageBudget: 2600000, expectation: 'Metade Superior da Tabela', overall: 77, stadium: 'Volkswagen Arena', stadiumCapacity: 30000 },
+    { id: 'freiburg', name: 'SC Freiburg', shortName: 'SCF', city: 'Freiburg', president: 'Oliver Leki', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 3, budget: 35000000, wageBudget: 2300000, expectation: 'Metade Superior da Tabela', overall: 77, stadium: 'Europa-Park Stadion', stadiumCapacity: 34700 },
+    { id: 'hoffenheim', name: 'TSG Hoffenheim', shortName: 'TSG', city: 'Sinsheim', president: 'Dietmar Hopp', primaryColor: '#1c63b7', secondaryColor: '#ffffff', reputation: 3, budget: 36000000, wageBudget: 2400000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'PreZero Arena', stadiumCapacity: 30150 },
+    { id: 'monchengladbach', name: 'Borussia Mgladbach', shortName: 'BMG', city: 'Mönchengladbach', president: 'Rainer Bonhof', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 3, budget: 34000000, wageBudget: 2300000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Borussia-Park', stadiumCapacity: 54042 },
+    { id: 'werderbremen', name: 'Werder Bremen', shortName: 'SVW', city: 'Bremen', president: 'Hubertus Hess-Grunewald', primaryColor: '#1b753f', secondaryColor: '#ffffff', reputation: 3, budget: 30000000, wageBudget: 2100000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Weserstadion', stadiumCapacity: 42100 },
+    { id: 'unionberlin', name: 'Union Berlin', shortName: 'FCU', city: 'Berlim', president: 'Dirk Zingler', primaryColor: '#d4011d', secondaryColor: '#ffffff', reputation: 3, budget: 32000000, wageBudget: 2200000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Stadion An der Alten Försterei', stadiumCapacity: 22012 },
+    { id: 'augsburg', name: 'FC Augsburg', shortName: 'FCA', city: 'Augsburg', president: 'Markus Krapf', primaryColor: '#ba3733', secondaryColor: '#005b41', reputation: 3, budget: 26000000, wageBudget: 1900000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'WWK Arena', stadiumCapacity: 30660 },
+    { id: 'mainz', name: 'Mainz 05', shortName: 'M05', city: 'Mainz', president: 'Stefan Hofmann', primaryColor: '#c3151c', secondaryColor: '#ffffff', reputation: 3, budget: 28000000, wageBudget: 2000000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Mewa Arena', stadiumCapacity: 33305 },
+    { id: 'heidenheim', name: '1. FC Heidenheim', shortName: 'FCH', city: 'Heidenheim', president: 'Holger Sanwald', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 2, budget: 22000000, wageBudget: 1600000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Voith-Arena', stadiumCapacity: 15000 },
+    { id: 'bochum', name: 'VfL Bochum', shortName: 'BOC', city: 'Bochum', president: 'Hans-Peter Villis', primaryColor: '#005ca9', secondaryColor: '#ffffff', reputation: 2, budget: 20000000, wageBudget: 1500000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Vonovia Ruhrstadion', stadiumCapacity: 26000 },
+    { id: 'stpauli', name: 'FC St. Pauli', shortName: 'STP', city: 'Hamburgo', president: 'Oke Göttlich', primaryColor: '#6a4b3b', secondaryColor: '#ffffff', reputation: 2, budget: 22000000, wageBudget: 1600000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Millerntor-Stadion', stadiumCapacity: 29546 },
+    { id: 'holstein_kiel', name: 'Holstein Kiel', shortName: 'KSV', city: 'Kiel', president: 'Steffen Schneekloth', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 2, budget: 18000000, wageBudget: 1300000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Holstein-Stadion', stadiumCapacity: 15034 },
+    { id: 'koln', name: '1. FC Köln', shortName: 'KOE', city: 'Colônia', president: 'Werner Wolf', primaryColor: '#e32219', secondaryColor: '#ffffff', reputation: 3, budget: 25000000, wageBudget: 1800000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'RheinEnergieStadion', stadiumCapacity: 50000 },
+    { id: 'hamburgo', name: 'Hamburger SV', shortName: 'HSV', city: 'Hamburgo', president: 'Marcell Jansen', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 3, budget: 28000000, wageBudget: 2000000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Volksparkstadion', stadiumCapacity: 57000 }
+  ],
+  ita_serie_a: [
+    { id: 'inter', name: 'Inter de Milão', shortName: 'INT', city: 'Milão', president: 'Giuseppe Marotta', primaryColor: '#00428a', secondaryColor: '#000000', reputation: 5, budget: 85000000, wageBudget: 5200000, expectation: 'Campeão da Liga', overall: 85, stadium: 'San Siro', stadiumCapacity: 75817 },
+    { id: 'milan', name: 'AC Milan', shortName: 'MIL', city: 'Milão', president: 'Paolo Scaroni', primaryColor: '#fb090b', secondaryColor: '#000000', reputation: 4, budget: 75000000, wageBudget: 4800000, expectation: 'Campeão da Liga', overall: 83, stadium: 'San Siro', stadiumCapacity: 75817 },
+    { id: 'juventus', name: 'Juventus', shortName: 'JUV', city: 'Turim', president: 'Gianluca Ferrero', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 4, budget: 80000000, wageBudget: 5000000, expectation: 'Campeão da Liga', overall: 83, stadium: 'Allianz Stadium', stadiumCapacity: 41507 },
+    { id: 'atalanta', name: 'Atalanta', shortName: 'ATA', city: 'Bérgamo', president: 'Antonio Percassi', primaryColor: '#1e71b8', secondaryColor: '#000000', reputation: 4, budget: 55000000, wageBudget: 3500000, expectation: 'Vaga na Champions League', overall: 81, stadium: 'Gewiss Stadium', stadiumCapacity: 24950 },
+    { id: 'napoli', name: 'Napoli', shortName: 'NAP', city: 'Nápoles', president: 'Aurelio De Laurentiis', primaryColor: '#0080c8', secondaryColor: '#ffffff', reputation: 4, budget: 65000000, wageBudget: 4200000, expectation: 'Vaga na Champions League', overall: 82, stadium: 'Stadio Diego Armando Maradona', stadiumCapacity: 54726 },
+    { id: 'roma', name: 'AS Roma', shortName: 'ASR', city: 'Roma', president: 'Dan Friedkin', primaryColor: '#8e1f2f', secondaryColor: '#f1ad1c', reputation: 4, budget: 55000000, wageBudget: 3800000, expectation: 'Vaga nas Copas Europeias', overall: 80, stadium: 'Stadio Olimpico', stadiumCapacity: 70634 },
+    { id: 'lazio', name: 'SS Lazio', shortName: 'LAZ', city: 'Roma', president: 'Claudio Lotito', primaryColor: '#87d8f7', secondaryColor: '#ffffff', reputation: 4, budget: 48000000, wageBudget: 3200000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'Stadio Olimpico', stadiumCapacity: 70634 },
+    { id: 'fiorentina', name: 'Fiorentina', shortName: 'FIO', city: 'Florença', president: 'Rocco Commisso', primaryColor: '#4f2d7f', secondaryColor: '#ffffff', reputation: 4, budget: 42000000, wageBudget: 2800000, expectation: 'Vaga nas Copas Europeias', overall: 78, stadium: 'Stadio Artemio Franchi', stadiumCapacity: 43147 },
+    { id: 'bologna', name: 'Bologna', shortName: 'BOL', city: 'Bolonha', president: 'Joey Saputo', primaryColor: '#1a2b4c', secondaryColor: '#9e1b32', reputation: 3, budget: 38000000, wageBudget: 2500000, expectation: 'Metade Superior da Tabela', overall: 78, stadium: 'Stadio Renato Dall Ara', stadiumCapacity: 38279 },
+    { id: 'torino', name: 'Torino', shortName: 'TOR', city: 'Turim', president: 'Urbano Cairo', primaryColor: '#800000', secondaryColor: '#ffffff', reputation: 3, budget: 32000000, wageBudget: 2200000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Stadio Olimpico Grande Torino', stadiumCapacity: 28177 },
+    { id: 'genoa', name: 'Genoa', shortName: 'GEN', city: 'Gênova', president: 'Alberto Zangrillo', primaryColor: '#002649', secondaryColor: '#a6192e', reputation: 3, budget: 26000000, wageBudget: 1800000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Stadio Luigi Ferraris', stadiumCapacity: 33205 },
+    { id: 'monza', name: 'Monza', shortName: 'MON', city: 'Monza', president: 'Paolo Berlusconi', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 28000000, wageBudget: 2000000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'U-Power Stadium', stadiumCapacity: 16917 },
+    { id: 'udinese', name: 'Udinese', shortName: 'UDI', city: 'Udine', president: 'Franco Soldati', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 3, budget: 25000000, wageBudget: 1800000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Bluenergy Stadium', stadiumCapacity: 25144 },
+    { id: 'parma', name: 'Parma', shortName: 'PAR', city: 'Parma', president: 'Kyle Krause', primaryColor: '#ffd700', secondaryColor: '#003399', reputation: 3, budget: 24000000, wageBudget: 1700000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Stadio Ennio Tardini', stadiumCapacity: 22352 },
+    { id: 'cagliari', name: 'Cagliari', shortName: 'CAG', city: 'Cagliari', president: 'Tommaso Giulini', primaryColor: '#900028', secondaryColor: '#002b49', reputation: 2, budget: 22000000, wageBudget: 1600000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Unipol Domus', stadiumCapacity: 16416 },
+    { id: 'verona', name: 'Hellas Verona', shortName: 'VER', city: 'Verona', president: 'Maurizio Setti', primaryColor: '#002b49', secondaryColor: '#ffcc00', reputation: 2, budget: 20000000, wageBudget: 1500000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Stadio Marcantonio Bentegodi', stadiumCapacity: 39211 },
+    { id: 'lecce', name: 'Lecce', shortName: 'LEC', city: 'Lecce', president: 'Saverio Sticchi Damiani', primaryColor: '#f1ad1c', secondaryColor: '#c8102e', reputation: 2, budget: 20000000, wageBudget: 1500000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Stadio Via del Mare', stadiumCapacity: 31533 },
+    { id: 'empoli', name: 'Empoli', shortName: 'EMP', city: 'Empoli', president: 'Fabrizio Corsi', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 2, budget: 18000000, wageBudget: 1400000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Stadio Carlo Castellani', stadiumCapacity: 16284 },
+    { id: 'como', name: 'Como 1907', shortName: 'COM', city: 'Como', president: 'Mirwan Suwarso', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 30000000, wageBudget: 2200000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Stadio Giuseppe Sinigaglia', stadiumCapacity: 13602 },
+    { id: 'venezia', name: 'Venezia FC', shortName: 'VEN', city: 'Veneza', president: 'Duncan Niederauer', primaryColor: '#005b41', secondaryColor: '#f58220', reputation: 2, budget: 18000000, wageBudget: 1400000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Stadio Pier Luigi Penzo', stadiumCapacity: 11150 }
+  ],
+  fra_ligue_1: [
+    { id: 'psg', name: 'Paris Saint-Germain', shortName: 'PSG', city: 'Paris', president: 'Nasser Al-Khelaïfi', primaryColor: '#004170', secondaryColor: '#da291c', reputation: 5, budget: 120000000, wageBudget: 6800000, expectation: 'Campeão da Liga', overall: 86, stadium: 'Parc des Princes', stadiumCapacity: 47929 },
+    { id: 'monaco', name: 'AS Monaco', shortName: 'ASM', city: 'Mônaco', president: 'Dmitry Rybolovlev', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 4, budget: 55000000, wageBudget: 3600000, expectation: 'Vaga na Champions League', overall: 81, stadium: 'Stade Louis II', stadiumCapacity: 18523 },
+    { id: 'marseille', name: 'Olympique de Marseille', shortName: 'OM', city: 'Marselha', president: 'Pablo Longoria', primaryColor: '#2faee0', secondaryColor: '#ffffff', reputation: 4, budget: 50000000, wageBudget: 3400000, expectation: 'Vaga na Champions League', overall: 80, stadium: 'Stade Vélodrome', stadiumCapacity: 67394 },
+    { id: 'lille', name: 'Lille OSC', shortName: 'LOSC', city: 'Lille', president: 'Olivier Létang', primaryColor: '#e30613', secondaryColor: '#002b49', reputation: 4, budget: 45000000, wageBudget: 3000000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'Decathlon Arena Pierre-Mauroy', stadiumCapacity: 50186 },
+    { id: 'lyon', name: 'Olympique Lyonnais', shortName: 'OL', city: 'Lyon', president: 'John Textor', primaryColor: '#122c60', secondaryColor: '#d6002f', reputation: 4, budget: 48000000, wageBudget: 3200000, expectation: 'Vaga nas Copas Europeias', overall: 79, stadium: 'Groupama Stadium', stadiumCapacity: 59186 },
+    { id: 'nice', name: 'OGC Nice', shortName: 'OGCN', city: 'Nice', president: 'Jean-Pierre Rivère', primaryColor: '#e30613', secondaryColor: '#000000', reputation: 3, budget: 38000000, wageBudget: 2600000, expectation: 'Metade Superior da Tabela', overall: 78, stadium: 'Allianz Riviera', stadiumCapacity: 36178 },
+    { id: 'rennes', name: 'Stade Rennais', shortName: 'SRFC', city: 'Rennes', president: 'Olivier Cloarec', primaryColor: '#e30613', secondaryColor: '#000000', reputation: 3, budget: 36000000, wageBudget: 2500000, expectation: 'Metade Superior da Tabela', overall: 77, stadium: 'Roazhon Park', stadiumCapacity: 29778 },
+    { id: 'lens', name: 'RC Lens', shortName: 'RCL', city: 'Lens', president: 'Joseph Oughourlian', primaryColor: '#e30613', secondaryColor: '#fdd116', reputation: 3, budget: 34000000, wageBudget: 2400000, expectation: 'Metade Superior da Tabela', overall: 77, stadium: 'Stade Bollaert-Delelis', stadiumCapacity: 38223 },
+    { id: 'brest', name: 'Stade Brestois', shortName: 'SB29', city: 'Brest', president: 'Denis Le Saint', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 28000000, wageBudget: 2000000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Stade Francis-Le Blé', stadiumCapacity: 15220 },
+    { id: 'reims', name: 'Stade de Reims', shortName: 'SDR', city: 'Reims', president: 'Jean-Pierre Caillot', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 26000000, wageBudget: 1900000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Stade Auguste-Delaune', stadiumCapacity: 21684 },
+    { id: 'strasbourg', name: 'RC Strasbourg', shortName: 'RCSA', city: 'Estrasburgo', president: 'Marc Keller', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 3, budget: 30000000, wageBudget: 2100000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Stade de la Meinau', stadiumCapacity: 26109 },
+    { id: 'toulouse', name: 'Toulouse FC', shortName: 'TFC', city: 'Toulouse', president: 'Damien Comolli', primaryColor: '#5c2d91', secondaryColor: '#ffffff', reputation: 3, budget: 24000000, wageBudget: 1800000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Stadium de Toulouse', stadiumCapacity: 33150 },
+    { id: 'montpellier', name: 'Montpellier HSC', shortName: 'MHSC', city: 'Montpellier', president: 'Laurent Nicollin', primaryColor: '#002b49', secondaryColor: '#f58220', reputation: 3, budget: 22000000, wageBudget: 1700000, expectation: 'Evitar Rebaixamento', overall: 74, stadium: 'Stade de la Mosson', stadiumCapacity: 22000 },
+    { id: 'nantes', name: 'FC Nantes', shortName: 'FCN', city: 'Nantes', president: 'Waldemar Kita', primaryColor: '#fdd116', secondaryColor: '#008751', reputation: 3, budget: 22000000, wageBudget: 1700000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Stade de la Beaujoire', stadiumCapacity: 35322 },
+    { id: 'auxerre', name: 'AJ Auxerre', shortName: 'AJA', city: 'Auxerre', president: 'James Zhou', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 2, budget: 18000000, wageBudget: 1400000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Stade Abbe-Deschamps', stadiumCapacity: 18541 },
+    { id: 'lehavre', name: 'Le Havre', shortName: 'HAC', city: 'Le Havre', president: 'Vincent Volpe', primaryColor: '#87ceeb', secondaryColor: '#002b49', reputation: 2, budget: 17000000, wageBudget: 1300000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Stade Oceane', stadiumCapacity: 25178 },
+    { id: 'angers', name: 'Angers SCO', shortName: 'SCO', city: 'Angers', president: 'Said Chabane', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 2, budget: 16000000, wageBudget: 1200000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Stade Raymond Kopa', stadiumCapacity: 18752 },
+    { id: 'saintetienne', name: 'Saint-Étienne', shortName: 'ASSE', city: 'Saint-Étienne', president: 'Ivan Gazidis', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 3, budget: 20000000, wageBudget: 1500000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Stade Geoffroy-Guichard', stadiumCapacity: 41965 },
+    { id: 'lorient', name: 'FC Lorient', shortName: 'FCL', city: 'Lorient', president: 'Loic Fery', primaryColor: '#f58220', secondaryColor: '#000000', reputation: 2, budget: 18000000, wageBudget: 1400000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Stade du Moustoir', stadiumCapacity: 18890 },
+    { id: 'metz', name: 'FC Metz', shortName: 'FCM', city: 'Metz', president: 'Bernard Serin', primaryColor: '#800020', secondaryColor: '#ffffff', reputation: 2, budget: 16000000, wageBudget: 1200000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Stade Saint-Symphorien', stadiumCapacity: 28786 }
+  ],
+  por_primeira_liga: [
+    { id: 'benfica', name: 'Benfica', shortName: 'SLB', city: 'Lisboa', president: 'Rui Costa', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 4, budget: 65000000, wageBudget: 4200000, expectation: 'Campeão da Liga', overall: 82, stadium: 'Estádio da Luz', stadiumCapacity: 64642 },
+    { id: 'sporting', name: 'Sporting CP', shortName: 'SCP', city: 'Lisboa', president: 'Frederico Varandas', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 4, budget: 60000000, wageBudget: 4000000, expectation: 'Campeão da Liga', overall: 82, stadium: 'Estádio José Alvalade', stadiumCapacity: 50095 },
+    { id: 'porto', name: 'FC Porto', shortName: 'FCP', city: 'Porto', president: 'André Villas-Boas', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 4, budget: 55000000, wageBudget: 3800000, expectation: 'Campeão da Liga', overall: 81, stadium: 'Estádio do Dragão', stadiumCapacity: 50033 },
+    { id: 'braga', name: 'SC Braga', shortName: 'SCB', city: 'Braga', president: 'António Salvador', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 32000000, wageBudget: 2200000, expectation: 'Vaga nas Copas Europeias', overall: 78, stadium: 'Municipal de Braga', stadiumCapacity: 30286 },
+    { id: 'vitoria_guimaraes', name: 'Vitória de Guimarães', shortName: 'VSC', city: 'Guimarães', president: 'António Miguel Cardoso', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 3, budget: 22000000, wageBudget: 1600000, expectation: 'Vaga nas Copas Europeias', overall: 76, stadium: 'D. Afonso Henriques', stadiumCapacity: 30029 },
+    { id: 'famalicao', name: 'FC Famalicão', shortName: 'FAM', city: 'Vila Nova de Famalicão', president: 'Jorge Silva', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 18000000, wageBudget: 1300000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Municipal de Famalicão', stadiumCapacity: 5186 },
+    { id: 'arouca', name: 'FC Arouca', shortName: 'FCA', city: 'Arouca', president: 'Carlos Pinho', primaryColor: '#fdd116', secondaryColor: '#003399', reputation: 2, budget: 14000000, wageBudget: 1100000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Municipal de Arouca', stadiumCapacity: 5600 },
+    { id: 'moreirense', name: 'Moreirense', shortName: 'MOR', city: 'Moreira de Cónegos', president: 'Vítor Magalhães', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 14000000, wageBudget: 1100000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Comendador Almeida Freitas', stadiumCapacity: 6153 },
+    { id: 'rio_ave', name: 'Rio Ave', shortName: 'RAV', city: 'Vila do Conde', president: 'Alexandrina Cruz', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 15000000, wageBudget: 1200000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Estádio dos Arcos', stadiumCapacity: 9065 },
+    { id: 'gil_vicente', name: 'Gil Vicente', shortName: 'GVC', city: 'Barcelos', president: 'Francisco Dias da Silva', primaryColor: '#e30613', secondaryColor: '#003399', reputation: 2, budget: 13000000, wageBudget: 1000000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Cidade de Barcelos', stadiumCapacity: 12046 },
+    { id: 'estoril', name: 'Estoril Praia', shortName: 'EST', city: 'Estoril', president: 'Ignacio Beristain', primaryColor: '#fdd116', secondaryColor: '#003399', reputation: 2, budget: 13000000, wageBudget: 1000000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'António Coimbra da Mota', stadiumCapacity: 8000 },
+    { id: 'casa_pia', name: 'Casa Pia', shortName: 'CPAC', city: 'Lisboa', president: 'Victor Franco', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 2, budget: 12000000, wageBudget: 900000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Estádio Pina Manique', stadiumCapacity: 2574 },
+    { id: 'boavista', name: 'Boavista FC', shortName: 'BFC', city: 'Porto', president: 'Vítor Murta', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 3, budget: 14000000, wageBudget: 1100000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Estádio do Bessa', stadiumCapacity: 28263 },
+    { id: 'farense', name: 'SC Farense', shortName: 'SCF', city: 'Faro', president: 'João Rodrigues', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 2, budget: 11000000, wageBudget: 900000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Estádio de São Luís', stadiumCapacity: 7000 },
+    { id: 'estrela_amadora', name: 'Estrela da Amadora', shortName: 'EAM', city: 'Amadora', president: 'Paulo Lopo', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 11000000, wageBudget: 900000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Estádio José Gomes', stadiumCapacity: 9288 },
+    { id: 'santa_clara', name: 'Santa Clara', shortName: 'CDSC', city: 'Ponta Delgada', president: 'Ricardo Pacheco', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 12000000, wageBudget: 900000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Estádio de São Miguel', stadiumCapacity: 12500 },
+    { id: 'nacional_madeira', name: 'CD Nacional', shortName: 'CDN', city: 'Funchal', president: 'Rui Alves', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Estádio da Madeira', stadiumCapacity: 5200 },
+    { id: 'avs', name: 'AVS Futebol', shortName: 'AVS', city: 'Vila das Aves', president: 'António Laranjeira', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 800000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Desportivo das Aves', stadiumCapacity: 8560 },
+    { id: 'maritimo', name: 'CS Marítimo', shortName: 'CSM', city: 'Funchal', president: 'Carlos André Gomes', primaryColor: '#008751', secondaryColor: '#e30613', reputation: 2, budget: 13000000, wageBudget: 1000000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Estádio do Marítimo', stadiumCapacity: 10600 },
+    { id: 'pacos_ferreira', name: 'Paços de Ferreira', shortName: 'FCPF', city: 'Paços de Ferreira', president: 'Paulo Meneses', primaryColor: '#fdd116', secondaryColor: '#008751', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Capital do Móvel', stadiumCapacity: 9076 }
+  ],
+  arg_primera_division: [
+    { id: 'riverplate', name: 'River Plate', shortName: 'RIV', city: 'Buenos Aires', president: 'Jorge Brito', primaryColor: '#ffffff', secondaryColor: '#e30613', reputation: 5, budget: 50000000, wageBudget: 3200000, expectation: 'Campeão da Liga', overall: 81, stadium: 'Mâs Monumental', stadiumCapacity: 84567 },
+    { id: 'bocajuniors', name: 'Boca Juniors', shortName: 'BOC', city: 'Buenos Aires', president: 'Juan Román Riquelme', primaryColor: '#003399', secondaryColor: '#fdd116', reputation: 5, budget: 48000000, wageBudget: 3000000, expectation: 'Campeão da Liga', overall: 80, stadium: 'La Bombonera', stadiumCapacity: 54000 },
+    { id: 'racing', name: 'Racing Club', shortName: 'RAC', city: 'Avellaneda', president: 'Víctor Blanco', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 4, budget: 32000000, wageBudget: 2100000, expectation: 'Vaga na Libertadores', overall: 78, stadium: 'Cilindro de Avellaneda', stadiumCapacity: 51389 },
+    { id: 'estudiantes', name: 'Estudiantes de La Plata', shortName: 'EDLP', city: 'La Plata', president: 'Juan Sebastián Verón', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 4, budget: 26000000, wageBudget: 1800000, expectation: 'Vaga na Libertadores', overall: 77, stadium: 'Jorge Luis Hirschi', stadiumCapacity: 32530 },
+    { id: 'talleres', name: 'Talleres', shortName: 'TAL', city: 'Córdoba', president: 'Andrés Fassi', primaryColor: '#002b49', secondaryColor: '#ffffff', reputation: 3, budget: 25000000, wageBudget: 1700000, expectation: 'Vaga na Libertadores', overall: 77, stadium: 'Mario Alberto Kempes', stadiumCapacity: 57000 },
+    { id: 'velez', name: 'Vélez Sarsfield', shortName: 'VEL', city: 'Buenos Aires', president: 'Fabián Berlanga', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 4, budget: 24000000, wageBudget: 1700000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'José Amalfitani', stadiumCapacity: 49540 },
+    { id: 'independiente', name: 'Independiente', shortName: 'IND', city: 'Avellaneda', president: 'Néstor Grindetti', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 4, budget: 26000000, wageBudget: 1800000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Libertadores de América', stadiumCapacity: 48069 },
+    { id: 'sanlorenzo', name: 'San Lorenzo', shortName: 'SLO', city: 'Buenos Aires', president: 'Marcelo Moretti', primaryColor: '#002b49', secondaryColor: '#e30613', reputation: 4, budget: 25000000, wageBudget: 1700000, expectation: 'Metade Superior da Tabela', overall: 76, stadium: 'Pedro Bidegain', stadiumCapacity: 47964 },
+    { id: 'rosariocentral', name: 'Rosario Central', shortName: 'CEN', city: 'Rosário', president: 'Gonzalo Belloso', primaryColor: '#002b49', secondaryColor: '#fdd116', reputation: 3, budget: 22000000, wageBudget: 1500000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Gigante de Arroyito', stadiumCapacity: 41465 },
+    { id: 'godoycruz', name: 'Godoy Cruz', shortName: 'GOD', city: 'Mendoza', president: 'Alejandro Chapini', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 3, budget: 18000000, wageBudget: 1300000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Malvinas Argentinas', stadiumCapacity: 42500 },
+    { id: 'defensayjusticia', name: 'Defensa y Justicia', shortName: 'DYJ', city: 'Florencio Varela', president: 'Diego Lemme', primaryColor: '#008751', secondaryColor: '#fdd116', reputation: 3, budget: 19000000, wageBudget: 1400000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Norberto Tomaghello', stadiumCapacity: 20000 },
+    { id: 'lanus', name: 'Lanús', shortName: 'LAN', city: 'Lanús', president: 'Luis María Chebel', primaryColor: '#800020', secondaryColor: '#ffffff', reputation: 3, budget: 20000000, wageBudget: 1400000, expectation: 'Metade Superior da Tabela', overall: 75, stadium: 'Ciudad de Lanús', stadiumCapacity: 47027 },
+    { id: 'argentinosjrs', name: 'Argentinos Juniors', shortName: 'AAAJ', city: 'Buenos Aires', president: 'Cristian Malaspina', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 20000000, wageBudget: 1400000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Diego Armando Maradona', stadiumCapacity: 26000 },
+    { id: 'newells', name: 'Newell s Old Boys', shortName: 'NOB', city: 'Rosário', president: 'Ignacio Astore', primaryColor: '#000000', secondaryColor: '#e30613', reputation: 3, budget: 20000000, wageBudget: 1400000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Marcelo Bielsa', stadiumCapacity: 42000 },
+    { id: 'belgrano', name: 'Belgrano', shortName: 'BEL', city: 'Córdoba', president: 'Luis Fabián Artime', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 3, budget: 18000000, wageBudget: 1300000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Julio César Villagra', stadiumCapacity: 34830 },
+    { id: 'huracan', name: 'Huracán', shortName: 'HUR', city: 'Buenos Aires', president: 'David Garzón', primaryColor: '#ffffff', secondaryColor: '#e30613', reputation: 3, budget: 17000000, wageBudget: 1200000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Tomás Adolfo Ducó', stadiumCapacity: 48314 },
+    { id: 'gimnasialp', name: 'Gimnasia La Plata', shortName: 'GELP', city: 'La Plata', president: 'Mariano Cowen', primaryColor: '#002b49', secondaryColor: '#ffffff', reputation: 3, budget: 16000000, wageBudget: 1200000, expectation: 'Evitar Rebaixamento', overall: 73, stadium: 'Juan Carmelo Zerillo', stadiumCapacity: 24544 },
+    { id: 'banfield', name: 'Banfield', shortName: 'BAN', city: 'Banfield', president: 'Eduardo Spinosa', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 15000000, wageBudget: 1100000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Florencio Sola', stadiumCapacity: 34901 },
+    { id: 'platense', name: 'Platense', shortName: 'PLA', city: 'Florida', president: 'Sebastián Ordóñez', primaryColor: '#6a4b3b', secondaryColor: '#ffffff', reputation: 2, budget: 14000000, wageBudget: 1000000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'Ciudad de Vicente López', stadiumCapacity: 31030 },
+    { id: 'tigre', name: 'Tigre', shortName: 'TIG', city: 'Victoria', president: 'Martín Suárez', primaryColor: '#002b49', secondaryColor: '#e30613', reputation: 2, budget: 14000000, wageBudget: 1000000, expectation: 'Evitar Rebaixamento', overall: 72, stadium: 'José Dellagiovanna', stadiumCapacity: 26282 }
+  ],
+  uru_primera_division: [
+    { id: 'penarol', name: 'Peñarol', shortName: 'CAP', city: 'Montevidéu', president: 'Ignacio Ruglio', primaryColor: '#fdd116', secondaryColor: '#000000', reputation: 4, budget: 24000000, wageBudget: 1600000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Campeón del Siglo', stadiumCapacity: 40700 },
+    { id: 'nacional_uy', name: 'Nacional', shortName: 'NAC', city: 'Montevidéu', president: 'Alejandro Balbi', primaryColor: '#ffffff', secondaryColor: '#003399', reputation: 4, budget: 23000000, wageBudget: 1500000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Gran Parque Central', stadiumCapacity: 34000 },
+    { id: 'defensor_sp', name: 'Defensor Sporting', shortName: 'DEF', city: 'Montevidéu', president: 'Alberto Ward', primaryColor: '#5c2d91', secondaryColor: '#ffffff', reputation: 3, budget: 12000000, wageBudget: 900000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Luis Franzini', stadiumCapacity: 16000 },
+    { id: 'danubio', name: 'Danubio', shortName: 'DAN', city: 'Montevidéu', president: 'Arturo del Campo', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 3, budget: 11000000, wageBudget: 800000, expectation: 'Vaga na Libertadores', overall: 72, stadium: 'Jardines del Hipódromo', stadiumCapacity: 18000 },
+    { id: 'liverpool_uy', name: 'Liverpool de Montevidéu', shortName: 'LIV', city: 'Montevidéu', president: 'José Luis Palma', primaryColor: '#003399', secondaryColor: '#000000', reputation: 3, budget: 12000000, wageBudget: 900000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Belvedere', stadiumCapacity: 8500 },
+    { id: 'boston_river', name: 'Boston River', shortName: 'BOS', city: 'Montevidéu', president: 'Roberto Perdomo', primaryColor: '#008751', secondaryColor: '#e30613', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Parque Artigas', stadiumCapacity: 6100 },
+    { id: 'wanderers_uy', name: 'Montevideo Wanderers', shortName: 'WAN', city: 'Montevidéu', president: 'Germán Barcala', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Parque Alfredo Víctor Viera', stadiumCapacity: 10000 },
+    { id: 'cerro_largo', name: 'Cerro Largo', shortName: 'CRL', city: 'Melo', president: 'Ernesto Dehl', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Metade Superior da Tabela', overall: 70, stadium: 'Antonio Ubilla', stadiumCapacity: 9000 },
+    { id: 'racing_uy', name: 'Racing de Montevidéu', shortName: 'RAC', city: 'Montevidéu', president: 'Washington Lizandro', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Metade Superior da Tabela', overall: 70, stadium: 'Parque Osvaldo Roberto', stadiumCapacity: 8500 },
+    { id: 'river_uy', name: 'River Plate do Uruguai', shortName: 'RIV', city: 'Montevidéu', president: 'Fabián Motta', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Metade Superior da Tabela', overall: 70, stadium: 'Parque Federico Omar Saroldi', stadiumCapacity: 5165 },
+    { id: 'progreso', name: 'Progreso', shortName: 'PRO', city: 'Montevidéu', president: 'Andrés Fabregat', primaryColor: '#fdd116', secondaryColor: '#e30613', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Parque Abraham Paladino', stadiumCapacity: 5400 },
+    { id: 'fenix_uy', name: 'Fénix', shortName: 'FEN', city: 'Montevidéu', president: 'Álvaro Chijane', primaryColor: '#5c2d91', secondaryColor: '#ffffff', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Parque Capurro', stadiumCapacity: 5500 },
+    { id: 'cerro_uy', name: 'Cerro', shortName: 'CER', city: 'Montevidéu', president: 'Alfredo Jaureguiverry', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Luis Tróccoli', stadiumCapacity: 25000 },
+    { id: 'torque', name: 'Montevideo City Torque', shortName: 'MCT', city: 'Montevidéu', president: 'Javier Noblega', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Charrúa', stadiumCapacity: 14000 },
+    { id: 'rampla_juniors', name: 'Rampla Juniors', shortName: 'RAM', city: 'Montevidéu', president: 'Daniel Bianchi', primaryColor: '#008751', secondaryColor: '#e30613', reputation: 2, budget: 6000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Olímpico', stadiumCapacity: 6000 },
+    { id: 'deportivo_maldonado', name: 'Deportivo Maldonado', shortName: 'DMA', city: 'Maldonado', president: 'Carlos Manta', primaryColor: '#e30613', secondaryColor: '#008751', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Domingo Burgueño', stadiumCapacity: 22000 },
+    { id: 'miramar_misiones', name: 'Miramar Misiones', shortName: 'MIR', city: 'Montevidéu', president: 'Alfredo Sánchez', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 2, budget: 6000000, wageBudget: 400000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Luis Méndez Piana', stadiumCapacity: 6500 },
+    { id: 'plaza_colonia', name: 'Plaza Colonia', shortName: 'PZC', city: 'Colonia', president: 'Carlos Manta', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 6000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Juan Prandi', stadiumCapacity: 4500 },
+    { id: 'rentistas', name: 'Rentistas', shortName: 'REN', city: 'Montevidéu', president: 'Mario Bursztyn', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 6000000, wageBudget: 400000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Complejo Rentistas', stadiumCapacity: 10600 },
+    { id: 'juventud_uy', name: 'Juventud de Las Piedras', shortName: 'JUV', city: 'Las Piedras', president: 'Yamandú Costa', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 6000000, wageBudget: 400000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Parque Artigas', stadiumCapacity: 12000 }
+  ],
+  chi_primera_division: [
+    { id: 'colocolo', name: 'Colo-Colo', shortName: 'CC', city: 'Santiago', president: 'Aníbal Mosa', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 4, budget: 25000000, wageBudget: 1800000, expectation: 'Campeão da Liga', overall: 77, stadium: 'Monumental David Arellano', stadiumCapacity: 47347 },
+    { id: 'udechile', name: 'Universidad de Chile', shortName: 'UCH', city: 'Santiago', president: 'Michael Clark', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 4, budget: 22000000, wageBudget: 1600000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Nacional Julio Martínez', stadiumCapacity: 48665 },
+    { id: 'ucatolica', name: 'Universidad Católica', shortName: 'UC', city: 'Santiago', president: 'Juan Tagle', primaryColor: '#0055a5', secondaryColor: '#ffffff', reputation: 4, budget: 20000000, wageBudget: 1500000, expectation: 'Vaga na Libertadores', overall: 75, stadium: 'San Carlos de Apoquindo', stadiumCapacity: 20000 },
+    { id: 'cobreloa', name: 'Cobreloa', shortName: 'COB', city: 'Calama', president: 'Marcelo Pérez', primaryColor: '#f58220', secondaryColor: '#ffffff', reputation: 3, budget: 12000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Zorros del Desierto', stadiumCapacity: 12102 },
+    { id: 'palestino', name: 'Palestino', shortName: 'PAL', city: 'Santiago', president: 'Jorge Uauy', primaryColor: '#008751', secondaryColor: '#e30613', reputation: 3, budget: 13000000, wageBudget: 1000000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Municipal de La Cisterna', stadiumCapacity: 12000 },
+    { id: 'union_espanola', name: 'Unión Española', shortName: 'UE', city: 'Santiago', president: 'Santiago Perdiguero', primaryColor: '#e30613', secondaryColor: '#fdd116', reputation: 3, budget: 13000000, wageBudget: 1000000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Santa Laura', stadiumCapacity: 19887 },
+    { id: 'coquimbo_unido', name: 'Coquimbo Unido', shortName: 'COQ', city: 'Coquimbo', president: 'Jorge Contador', primaryColor: '#fdd116', secondaryColor: '#000000', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Francisco Sánchez Rumoroso', stadiumCapacity: 18750 },
+    { id: 'huachipato', name: 'Huachipato', shortName: 'HUA', city: 'Talcahuano', president: 'Victoriano Cerda', primaryColor: '#003399', secondaryColor: '#000000', reputation: 2, budget: 12000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'CAP Acero', stadiumCapacity: 10500 },
+    { id: 'everton_chi', name: 'Everton de Viña del Mar', shortName: 'EVE', city: 'Viña del Mar', president: 'Pedro Cedillo', primaryColor: '#003399', secondaryColor: '#fdd116', reputation: 2, budget: 12000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Sausalito', stadiumCapacity: 23000 },
+    { id: 'deportes_iquique', name: 'Deportes Iquique', shortName: 'CDI', city: 'Iquique', president: 'Cesare Rossi', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Tierra de Campeones', stadiumCapacity: 13171 },
+    { id: 'ohiggins', name: 'O Higgins', shortName: 'OHI', city: 'Rancagua', president: 'Pablo Hoffmann', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'El Teniente', stadiumCapacity: 14450 },
+    { id: 'cobresal', name: 'Cobresal', shortName: 'CSL', city: 'El Salvador', president: 'David Agüero', primaryColor: '#f58220', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'El Cobre', stadiumCapacity: 12000 },
+    { id: 'audax_italiano', name: 'Audax Italiano', shortName: 'AUD', city: 'Santiago', president: 'Gonzalo Cilley', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Bicentenario de La Florida', stadiumCapacity: 12000 },
+    { id: 'nublense', name: 'Ñublense', shortName: 'NUB', city: 'Chillán', president: 'Sergio Gioino', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Nelson Oyarzún', stadiumCapacity: 12000 },
+    { id: 'union_la_calera', name: 'Unión La Calera', shortName: 'ULC', city: 'La Calera', president: 'Martín Iribarne', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Nicolás Chahuán Nazar', stadiumCapacity: 9200 },
+    { id: 'deportes_copiapo', name: 'Deportes Copiapó', shortName: 'COP', city: 'Copiapó', president: 'Luis Galdames', primaryColor: '#ffffff', secondaryColor: '#e30613', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Luis Valenzuela Hermosilla', stadiumCapacity: 8600 },
+    { id: 'magallanes', name: 'Magallanes', shortName: 'MAG', city: 'San Bernardo', president: 'Cristian Ogalde', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Municipal de San Bernardo', stadiumCapacity: 3500 },
+    { id: 'curico_unido', name: 'Curicó Unido', shortName: 'CUR', city: 'Curicó', president: 'Patricio Romero', primaryColor: '#ffffff', secondaryColor: '#e30613', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'La Granja', stadiumCapacity: 8278 },
+    { id: 'santiago_wanderers', name: 'Santiago Wanderers', shortName: 'SW', city: 'Valparaíso', president: 'Reinaldo Sánchez', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 3, budget: 10000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Elías Figueroa Brander', stadiumCapacity: 20575 },
+    { id: 'antofagasta', name: 'Deportes Antofagasta', shortName: 'ANT', city: 'Antofagasta', president: 'Jorge Sánchez', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Calvo y Bascuñán', stadiumCapacity: 21100 }
+  ],
+  col_primera_a: [
+    { id: 'atletico_nacional', name: 'Atlético Nacional', shortName: 'NAL', city: 'Medellín', president: 'Sebastián Arango', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 4, budget: 26000000, wageBudget: 1800000, expectation: 'Campeão da Liga', overall: 77, stadium: 'Atanasio Girardot', stadiumCapacity: 44863 },
+    { id: 'millonarios', name: 'Millonarios', shortName: 'MIL', city: 'Bogotá', president: 'Enrique Camacho', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 4, budget: 24000000, wageBudget: 1700000, expectation: 'Campeão da Liga', overall: 76, stadium: 'El Campín', stadiumCapacity: 36343 },
+    { id: 'junior_barranquilla', name: 'Junior Barranquilla', shortName: 'JUN', city: 'Barranquilla', president: 'Alejandro Char', primaryColor: '#e30613', secondaryColor: '#003399', reputation: 4, budget: 25000000, wageBudget: 1700000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Metropolitano Roberto Meléndez', stadiumCapacity: 46692 },
+    { id: 'america_de_cali', name: 'América de Cali', shortName: 'AME', city: 'Cali', president: 'Marcela Gómez', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 4, budget: 22000000, wageBudget: 1600000, expectation: 'Vaga na Libertadores', overall: 75, stadium: 'Pascual Guerrero', stadiumCapacity: 35405 },
+    { id: 'santa_fe', name: 'Independiente Santa Fe', shortName: 'SFE', city: 'Bogotá', president: 'Eduardo Méndez', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 4, budget: 20000000, wageBudget: 1500000, expectation: 'Vaga na Libertadores', overall: 75, stadium: 'El Campín', stadiumCapacity: 36343 },
+    { id: 'deportes_tolima', name: 'Deportes Tolima', shortName: 'TOL', city: 'Ibagué', president: 'César Camargo', primaryColor: '#800020', secondaryColor: '#fdd116', reputation: 3, budget: 18000000, wageBudget: 1300000, expectation: 'Vaga na Libertadores', overall: 74, stadium: 'Manuel Murillo Toro', stadiumCapacity: 28100 },
+    { id: 'medellin', name: 'Independiente Medellín', shortName: 'DIM', city: 'Medellín', president: 'Daniel Ossa', primaryColor: '#e30613', secondaryColor: '#003399', reputation: 3, budget: 19000000, wageBudget: 1400000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Atanasio Girardot', stadiumCapacity: 44863 },
+    { id: 'deportivo_cali', name: 'Deportivo Cali', shortName: 'CAL', city: 'Cali', president: 'Humberto Arias', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 4, budget: 18000000, wageBudget: 1300000, expectation: 'Metade Superior da Tabela', overall: 74, stadium: 'Palmaseca', stadiumCapacity: 44000 },
+    { id: 'bucaramanga', name: 'Atlético Bucaramanga', shortName: 'BUC', city: 'Bucaramanga', president: 'Jaime Ordóñez', primaryColor: '#fdd116', secondaryColor: '#008751', reputation: 3, budget: 14000000, wageBudget: 1000000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Alfonso López', stadiumCapacity: 28000 },
+    { id: 'once_caldas', name: 'Once Caldas', shortName: 'ONC', city: 'Manizales', president: 'Tulio Mario Castrillón', primaryColor: '#ffffff', secondaryColor: '#003399', reputation: 3, budget: 15000000, wageBudget: 1100000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Palogrande', stadiumCapacity: 28678 },
+    { id: 'deportivo_pereira', name: 'Deportivo Pereira', shortName: 'PER', city: 'Pereira', president: 'Álvaro López', primaryColor: '#fdd116', secondaryColor: '#e30613', reputation: 3, budget: 14000000, wageBudget: 1000000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Hernán Ramírez Villegas', stadiumCapacity: 30297 },
+    { id: 'la_equidad', name: 'La Equidad', shortName: 'EQU', city: 'Bogotá', president: 'Carlos Mario Zuluaga', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 12000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Metropolitano de Techo', stadiumCapacity: 10000 },
+    { id: 'aguilas_doradas', name: 'Águilas Doradas', shortName: 'AGU', city: 'Rionegro', president: 'Fernando Salazar', primaryColor: '#d4af37', secondaryColor: '#e30613', reputation: 2, budget: 13000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Alberto Grisales', stadiumCapacity: 14000 },
+    { id: 'deportivo_pasto', name: 'Deportivo Pasto', shortName: 'PAS', city: 'Pasto', president: 'Óscar Casabon', primaryColor: '#e30613', secondaryColor: '#003399', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Departamental Libertad', stadiumCapacity: 20000 },
+    { id: 'envigado', name: 'Envigado FC', shortName: 'ENV', city: 'Envigado', president: 'Ramiro Ruiz', primaryColor: '#f58220', secondaryColor: '#008751', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 71, stadium: 'Polideportivo Sur', stadiumCapacity: 14000 },
+    { id: 'jaguares_cordoba', name: 'Jaguares de Córdoba', shortName: 'JAG', city: 'Montería', president: 'Nelson Soto', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Jaraguay', stadiumCapacity: 12000 },
+    { id: 'alianza_petrolera', name: 'Alianza FC', shortName: 'ALZ', city: 'Valledupar', president: 'Carlos Ferreira', primaryColor: '#002b49', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Armando Maestre Pavajeau', stadiumCapacity: 11000 },
+    { id: 'fortaleza_ceif', name: 'Fortaleza CEIF', shortName: 'FOR', city: 'Bogotá', president: 'Carlos Barato', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Metropolitano de Techo', stadiumCapacity: 10000 },
+    { id: 'boyaca_chico', name: 'Boyacá Chicó', shortName: 'BOY', city: 'Tunja', president: 'Eduardo Pimentel', primaryColor: '#1e71b8', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'La Independencia', stadiumCapacity: 20630 },
+    { id: 'patriotas', name: 'Patriotas Boyacá', shortName: 'PAT', city: 'Tunja', president: 'César Guzmán', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'La Independencia', stadiumCapacity: 20630 }
+  ],
+  par_primera_division: [
+    { id: 'olimpia', name: 'Olimpia', shortName: 'OLI', city: 'Assunção', president: 'Rodrigo Nogués', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 4, budget: 24000000, wageBudget: 1700000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Manuel Ferreira', stadiumCapacity: 22000 },
+    { id: 'cerro_porteno', name: 'Cerro Porteño', shortName: 'CCP', city: 'Assunção', president: 'Juan José Zapag', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 4, budget: 24000000, wageBudget: 1700000, expectation: 'Campeão da Liga', overall: 76, stadium: 'General Pablo Rojas', stadiumCapacity: 45000 },
+    { id: 'libertad', name: 'Libertad', shortName: 'LIB', city: 'Assunção', president: 'Rubén Di Tore', primaryColor: '#000000', secondaryColor: '#ffffff', reputation: 4, budget: 25000000, wageBudget: 1800000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Tigo La Huerta', stadiumCapacity: 10100 },
+    { id: 'guarani_par', name: 'Guaraní', shortName: 'GUA', city: 'Assunção', president: 'Emilio Daher', primaryColor: '#fdd116', secondaryColor: '#000000', reputation: 3, budget: 14000000, wageBudget: 1000000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Rogelio Livieres', stadiumCapacity: 8000 },
+    { id: 'nacional_par', name: 'Nacional do Paraguai', shortName: 'NAC', city: 'Assunção', president: 'Juan Carlos Galeano', primaryColor: '#ffffff', secondaryColor: '#003399', reputation: 3, budget: 12000000, wageBudget: 900000, expectation: 'Vaga na Libertadores', overall: 72, stadium: 'Arsenio Erico', stadiumCapacity: 7500 },
+    { id: 'sportivo_luqueno', name: 'Sportivo Luqueño', shortName: 'SLU', city: 'Luque', president: 'Daniel Rodríguez', primaryColor: '#003399', secondaryColor: '#fdd116', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Feliciano Cáceres', stadiumCapacity: 26974 },
+    { id: 'sportivo_ameliano', name: 'Sportivo Ameliano', shortName: 'AME', city: 'Assunção', president: 'Héctor Melgarejo', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'José Tomás Silva', stadiumCapacity: 4000 },
+    { id: '2_de_mayo', name: '2 de Mayo', shortName: '2DM', city: 'Pedro Juan Caballero', president: 'Hugo Romero', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Río Parapití', stadiumCapacity: 25000 },
+    { id: 'sol_de_america', name: 'Sol de América', shortName: 'SOL', city: 'Villa Elisa', president: 'Carlos Giagni', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 70, stadium: 'Luis Alfonso Giagni', stadiumCapacity: 11000 },
+    { id: 'tacuary', name: 'Tacuary', shortName: 'TAC', city: 'Assunção', president: 'Regis Marques', primaryColor: '#ffffff', secondaryColor: '#000000', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Toribio Vargas', stadiumCapacity: 3000 },
+    { id: 'general_caballero', name: 'General Caballero JLM', shortName: 'GCJ', city: 'Juan León Mallorquín', president: 'Julio Aldama', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Ka arendy', stadiumCapacity: 10120 },
+    { id: 'sportivo_trinidense', name: 'Sportivo Trinidense', shortName: 'TRI', city: 'Assunção', president: 'Norman Rieder', primaryColor: '#fdd116', secondaryColor: '#003399', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 70, stadium: 'Martín Torres', stadiumCapacity: 3000 },
+    { id: 'guairena', name: 'Guaireña FC', shortName: 'GFC', city: 'Villarrica', president: 'Luis Cáceres', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Parque del Guairá', stadiumCapacity: 15000 },
+    { id: 'resistencia_sc', name: 'Resistencia SC', shortName: 'RES', city: 'Assunção', president: 'Roberto Garcete', primaryColor: '#87ceeb', secondaryColor: '#e30613', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Tomás Beggan Correa', stadiumCapacity: 3500 },
+    { id: '12_de_octubre', name: '12 de Octubre', shortName: '12O', city: 'Itauguá', president: 'Elbio Vázquez', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Luis Salinas', stadiumCapacity: 10000 },
+    { id: 'san_lorenzo_par', name: 'Sportivo San Lorenzo', shortName: 'SSL', city: 'San Lorenzo', president: 'Ramón Delgado', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Gunther Vogel', stadiumCapacity: 5000 },
+    { id: 'river_plate_par', name: 'River Plate de Assunção', shortName: 'RIV', city: 'Assunção', president: 'Carlos Ortega', primaryColor: '#ffffff', secondaryColor: '#e30613', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Los Jardines del Kelito', stadiumCapacity: 6500 },
+    { id: 'rubio_nu', name: 'Rubio Ñu', shortName: 'RUB', city: 'Assunção', president: 'Rubén Martín Ruiz', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'La Arboleda', stadiumCapacity: 8000 },
+    { id: 'deportivo_capiata', name: 'Deportivo Capiatá', shortName: 'CAP', city: 'Capiatá', president: 'Erico Galeano', primaryColor: '#fdd116', secondaryColor: '#003399', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Erico Galeano', stadiumCapacity: 15000 },
+    { id: 'independiente_fbc', name: 'Independiente FBC', shortName: 'IND', city: 'Assunção', president: 'Saturnino Gamarra', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 6000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Ricardo Gregor', stadiumCapacity: 4000 }
+  ],
+  ecu_serie_a: [
+    { id: 'ldu_quito', name: 'LDU Quito', shortName: 'LDU', city: 'Quito', president: 'Isaac Álvarez', primaryColor: '#ffffff', secondaryColor: '#003399', reputation: 4, budget: 26000000, wageBudget: 1800000, expectation: 'Campeão da Liga', overall: 77, stadium: 'Rodrigo Paz Delgado', stadiumCapacity: 41575 },
+    { id: 'independiente_valle', name: 'Independiente del Valle', shortName: 'IDV', city: 'Sangolquí', president: 'Franklin Tello', primaryColor: '#000000', secondaryColor: '#003399', reputation: 4, budget: 25000000, wageBudget: 1700000, expectation: 'Campeão da Liga', overall: 77, stadium: 'Banco Guayaquil', stadiumCapacity: 12000 },
+    { id: 'barcelona_sc', name: 'Barcelona de Guayaquil', shortName: 'BSC', city: 'Guayaquil', president: 'Antonio Álvarez', primaryColor: '#fdd116', secondaryColor: '#000000', reputation: 4, budget: 24000000, wageBudget: 1700000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Monumental Banco Pichincha', stadiumCapacity: 59283 },
+    { id: 'emelec', name: 'Emelec', shortName: 'EME', city: 'Guayaquil', president: 'José Pileggi', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 4, budget: 22000000, wageBudget: 1500000, expectation: 'Vaga na Libertadores', overall: 75, stadium: 'George Capwell', stadiumCapacity: 40000 },
+    { id: 'aucas', name: 'Aucas', shortName: 'AUC', city: 'Quito', president: 'Danny Walker', primaryColor: '#fdd116', secondaryColor: '#e30613', reputation: 3, budget: 16000000, wageBudget: 1200000, expectation: 'Vaga na Libertadores', overall: 74, stadium: 'Gonzalo Pozo Ripalda', stadiumCapacity: 18799 },
+    { id: 'universidad_catolica_ecu', name: 'Universidad Católica do Equador', shortName: 'UCE', city: 'Quito', president: 'Santiago Cattani', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 3, budget: 15000000, wageBudget: 1100000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Olímpico Atahualpa', stadiumCapacity: 35258 },
+    { id: 'el_nacional', name: 'El Nacional', shortName: 'ELN', city: 'Quito', president: 'Marco Pazmino', primaryColor: '#e30613', secondaryColor: '#87ceeb', reputation: 3, budget: 14000000, wageBudget: 1000000, expectation: 'Metade Superior da Tabela', overall: 73, stadium: 'Olímpico Atahualpa', stadiumCapacity: 35258 },
+    { id: 'delfin', name: 'Delfín SC', shortName: 'DEL', city: 'Manta', president: 'José Delgado', primaryColor: '#fdd116', secondaryColor: '#003399', reputation: 2, budget: 12000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Jocay', stadiumCapacity: 22000 },
+    { id: 'macara', name: 'Macará', shortName: 'MAC', city: 'Ambato', president: 'Miller Salazar', primaryColor: '#87ceeb', secondaryColor: '#003399', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Bellavista', stadiumCapacity: 16467 },
+    { id: 'deportivo_cuenca', name: 'Deportivo Cuenca', shortName: 'CUE', city: 'Cuenca', president: 'Nataly Villavicencio', primaryColor: '#e30613', secondaryColor: '#000000', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Alejandro Serrano Aguilar', stadiumCapacity: 16500 },
+    { id: 'orense', name: 'Orense SC', shortName: 'ORE', city: 'Machala', president: 'Martha Romero', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: '9 de Mayo', stadiumCapacity: 16500 },
+    { id: 'tecnico_universitario', name: 'Técnico Universitario', shortName: 'TEC', city: 'Ambato', president: 'Tito Jara', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Bellavista', stadiumCapacity: 16467 },
+    { id: 'mushuc_runa', name: 'Mushuc Runa', shortName: 'MRU', city: 'Ambato', president: 'Luis Alfonso Chango', primaryColor: '#008751', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'COAC Mushuc Runa', stadiumCapacity: 8200 },
+    { id: 'cumbaya', name: 'Cumbayá FC', shortName: 'CUM', city: 'Quito', president: 'Diana Morales', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Olímpico Atahualpa', stadiumCapacity: 35258 },
+    { id: 'imbabura', name: 'Imbabura SC', shortName: 'IMB', city: 'Ibarra', president: 'Luis Aguirre', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Olímpico de Ibarra', stadiumCapacity: 17300 },
+    { id: 'libertad_ecu', name: 'Libertad FC de Loja', shortName: 'LIB', city: 'Loja', president: 'Marlon Granda', primaryColor: '#f58220', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Reina del Cisne', stadiumCapacity: 14935 },
+    { id: 'guayaquil_city', name: 'Guayaquil City', shortName: 'GC', city: 'Guayaquil', president: 'Iván Mendoza', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 70, stadium: 'Christian Benítez', stadiumCapacity: 10152 },
+    { id: 'gualaceo', name: 'Gualaceo SC', shortName: 'GSC', city: 'Gualaceo', president: 'Kléber León', primaryColor: '#fdd116', secondaryColor: '#008751', reputation: 2, budget: 7000000, wageBudget: 500000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Gerardo León Pozo', stadiumCapacity: 3171 },
+    { id: 'olmedo', name: 'Olmedo', shortName: 'OLM', city: 'Riobamba', president: 'Fernando Flor', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Olímpico de Riobamba', stadiumCapacity: 14400 },
+    { id: 'manta_fc', name: 'Manta FC', shortName: 'MAN', city: 'Manta', president: 'Jaime Estrada', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Jocay', stadiumCapacity: 22000 }
+  ],
+  per_primera_division: [
+    { id: 'universitario', name: 'Universitario', shortName: 'UNI', city: 'Lima', president: 'Jean Ferrari', primaryColor: '#fffdd0', secondaryColor: '#800020', reputation: 4, budget: 22000000, wageBudget: 1600000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Monumental U Marathon', stadiumCapacity: 80093 },
+    { id: 'alianza_lima', name: 'Alianza Lima', shortName: 'ALI', city: 'Lima', president: 'Rafael Medina', primaryColor: '#002b49', secondaryColor: '#ffffff', reputation: 4, budget: 22000000, wageBudget: 1600000, expectation: 'Campeão da Liga', overall: 76, stadium: 'Alejandro Villanueva', stadiumCapacity: 33938 },
+    { id: 'sporting_cristal', name: 'Sporting Cristal', shortName: 'CRI', city: 'Lima', president: 'Joel Raffo', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 4, budget: 21000000, wageBudget: 1500000, expectation: 'Campeão da Liga', overall: 75, stadium: 'Alberto Gallardo', stadiumCapacity: 11600 },
+    { id: 'melgar', name: 'FBC Melgar', shortName: 'MEL', city: 'Arequipa', president: 'Jader Rizqallah', primaryColor: '#e30613', secondaryColor: '#000000', reputation: 3, budget: 17000000, wageBudget: 1200000, expectation: 'Vaga na Libertadores', overall: 74, stadium: 'Monumental de la UNSA', stadiumCapacity: 45000 },
+    { id: 'cienciano', name: 'Cienciano', shortName: 'CIE', city: 'Cusco', president: 'Sergio Ludeña', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 3, budget: 14000000, wageBudget: 1000000, expectation: 'Vaga na Libertadores', overall: 73, stadium: 'Inca Garcilaso de la Vega', stadiumCapacity: 42056 },
+    { id: 'cusco_fc', name: 'Cusco FC', shortName: 'CUS', city: 'Cusco', president: 'Julio Vásquez', primaryColor: '#000000', secondaryColor: '#fdd116', reputation: 2, budget: 13000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Inca Garcilaso de la Vega', stadiumCapacity: 42056 },
+    { id: 'ad_tarma', name: 'ADT Tarma', shortName: 'ADT', city: 'Tarma', president: 'Claudio Limaylla', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Unión Tarma', stadiumCapacity: 9100 },
+    { id: 'cesar_vallejo', name: 'Universidad César Vallejo', shortName: 'UCV', city: 'Trujillo', president: 'Richard Acuña', primaryColor: '#003399', secondaryColor: '#f58220', reputation: 3, budget: 14000000, wageBudget: 1000000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Mansiche', stadiumCapacity: 25036 },
+    { id: 'sport_boys', name: 'Sport Boys', shortName: 'SBA', city: 'Callao', president: 'Adrián Alcocer', primaryColor: '#ff69b4', secondaryColor: '#000000', reputation: 3, budget: 12000000, wageBudget: 900000, expectation: 'Metade Superior da Tabela', overall: 72, stadium: 'Miguel Grau', stadiumCapacity: 17000 },
+    { id: 'deportivo_garcilaso', name: 'Deportivo Garcilaso', shortName: 'GAR', city: 'Cusco', president: 'Alfredo Zegarra', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Inca Garcilaso de la Vega', stadiumCapacity: 42056 },
+    { id: 'atletico_grau', name: 'Atlético Grau', shortName: 'GRA', city: 'Piura', president: 'Arturo Ríos', primaryColor: '#fdd116', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Campeones del 36', stadiumCapacity: 12000 },
+    { id: 'los_chankas', name: 'Los Chankas', shortName: 'CHA', city: 'Andahuaylas', president: 'Guido Iñigo', primaryColor: '#800020', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Los Chankas', stadiumCapacity: 10000 },
+    { id: 'sport_huancayo', name: 'Sport Huancayo', shortName: 'SHU', city: 'Huancayo', president: 'Raúl Rojas', primaryColor: '#e30613', secondaryColor: '#008751', reputation: 2, budget: 11000000, wageBudget: 800000, expectation: 'Metade Superior da Tabela', overall: 71, stadium: 'Huancayo', stadiumCapacity: 20000 },
+    { id: 'utc_cajamarca', name: 'UTC Cajamarca', shortName: 'UTC', city: 'Cajamarca', president: 'Joaquín Ramírez', primaryColor: '#87ceeb', secondaryColor: '#ffffff', reputation: 2, budget: 10000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Héroes de San Ramón', stadiumCapacity: 18000 },
+    { id: 'alianza_atletico', name: 'Alianza Atlético', shortName: 'AAS', city: 'Sullana', president: 'Lánder Alemán', primaryColor: '#003399', secondaryColor: '#ffffff', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Campeones del 36', stadiumCapacity: 12000 },
+    { id: 'comerciantes_unidos', name: 'Comerciantes Unidos', shortName: 'COM', city: 'Cutervo', president: 'Aníbal Pedraza', primaryColor: '#5c2d91', secondaryColor: '#fdd116', reputation: 2, budget: 9000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Juan Maldonado Gamarra', stadiumCapacity: 8000 },
+    { id: 'carlos_mannucci', name: 'Carlos A. Mannucci', shortName: 'CAM', city: 'Trujillo', president: 'Raúl Lozano', primaryColor: '#003399', secondaryColor: '#e30613', reputation: 2, budget: 9000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Mansiche', stadiumCapacity: 25036 },
+    { id: 'union_comercio', name: 'Unión Comercio', shortName: 'UCO', city: 'Tarapoto', president: 'Fredy Chávez', primaryColor: '#e30613', secondaryColor: '#ffffff', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 69, stadium: 'Carlos Vidaurre García', stadiumCapacity: 7000 },
+    { id: 'deportivo_municipal', name: 'Deportivo Municipal', shortName: 'MUN', city: 'Lima', president: 'Samuel Astudillo', primaryColor: '#ffffff', secondaryColor: '#e30613', reputation: 2, budget: 9000000, wageBudget: 700000, expectation: 'Evitar Rebaixamento', overall: 70, stadium: 'Iván Elías Moreno', stadiumCapacity: 13773 },
+    { id: 'cantolao', name: 'Academia Cantolao', shortName: 'CAN', city: 'Callao', president: 'Gisella Mandriotti', primaryColor: '#fdd116', secondaryColor: '#000000', reputation: 2, budget: 8000000, wageBudget: 600000, expectation: 'Evitar Rebaixamento', overall: 68, stadium: 'Miguel Grau', stadiumCapacity: 17000 }
+  ]
+};
+
+// Validate and populate clubs array with country, countryCode, continent, eligibleTournament
+const allClubs = [];
+const seenClubIds = new Set();
+const leagueMap = new Map(leagues.map(l => [l.id, l]));
+
+for (const league of leagues) {
+  const clubs = clubsByLeague[league.id];
+  if (!clubs) {
+    throw new Error(`Missing clubs array for league ${league.id}`);
+  }
+  if (clubs.length !== 20) {
+    throw new Error(`League ${league.id} has ${clubs.length} clubs instead of 20!`);
+  }
+  for (const club of clubs) {
+    if (seenClubIds.has(club.id)) {
+      throw new Error(`Duplicate club ID found: "${club.id}"`);
+    }
+    seenClubIds.add(club.id);
+
+    allClubs.push({
+      ...club,
+      leagueId: league.id,
+      country: league.country,
+      countryCode: league.countryCode,
+      continent: league.continent,
+      eligibleTournament: league.eligibleTournament
+    });
+  }
+}
+
+console.log(`Validated successfully!`);
+console.log(`Total leagues: ${leagues.length}`);
+console.log(`Total clubs: ${allClubs.length}`);
+
+// Write js/leagues_data.js
+const fileContent = `/**
+ * @license
+ * FUTMANAGER Mobile - js/leagues_data.js
+ * Expansão de Ligas e Clubes (Etapa 7)
+ * 14 Ligas com exatamente 20 clubes cada (280 clubes no total)
+ * Preparado com identificadores continentais (SA = Libertadores, EU = Champions League)
+ */
+
+export const EXPANDED_NATIONALITIES = ${JSON.stringify(NATIONALITIES, null, 2)};
+
+export const EXPANDED_LEAGUES = ${JSON.stringify(leagues, null, 2)};
+
+export const EXPANDED_CLUBS = ${JSON.stringify(allClubs, null, 2)};
+`;
+
+fs.writeFileSync(path.join(process.cwd(), 'js', 'leagues_data.js'), fileContent, 'utf-8');
+console.log('Successfully written to js/leagues_data.js!');

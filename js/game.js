@@ -224,7 +224,7 @@ function recordGoalInTopScorers(topScorers, { playerId, playerName, clubId, club
  * @param {Object} careerState 
  * @returns {{ homeScore: number, awayScore: number, scorers: Array }}
  */
-export function simulateAiMatch(homeClub, awayClub, careerState) {
+export function simulateAiMatch(homeClub, awayClub, careerState, targetTopScorers = null) {
   if (!careerState.aiSquads) careerState.aiSquads = {};
   if (!careerState.aiSquads[homeClub.id]) {
     careerState.aiSquads[homeClub.id] = generateClubSquad(homeClub);
@@ -248,6 +248,7 @@ export function simulateAiMatch(homeClub, awayClub, careerState) {
   const awayGoals = generateRealisticGoals(awayLambda);
 
   const scorers = [];
+  const topScorersList = targetTopScorers || careerState.topScorers || [];
 
   for (let i = 0; i < homeGoals; i++) {
     const scorer = pickScorerFromSquad(homeSquad);
@@ -260,7 +261,7 @@ export function simulateAiMatch(homeClub, awayClub, careerState) {
       clubName: homeClub.name
     };
     scorers.push(scorerData);
-    recordGoalInTopScorers(careerState.topScorers, scorerData);
+    recordGoalInTopScorers(topScorersList, scorerData);
   }
 
   for (let i = 0; i < awayGoals; i++) {
@@ -274,7 +275,7 @@ export function simulateAiMatch(homeClub, awayClub, careerState) {
       clubName: awayClub.name
     };
     scorers.push(scorerData);
-    recordGoalInTopScorers(careerState.topScorers, scorerData);
+    recordGoalInTopScorers(topScorersList, scorerData);
   }
 
   scorers.sort((a, b) => a.minute - b.minute);
@@ -395,8 +396,8 @@ export function getNextMatchPreview(careerState) {
     careerState.isSeasonFinished = true;
     return {
       isSeasonFinished: true,
-      round: careerState.totalRounds || (careerState.calendar?.length || 22),
-      totalRounds: careerState.totalRounds || (careerState.calendar?.length || 22),
+      round: careerState.totalRounds || (careerState.calendar?.length || 38),
+      totalRounds: careerState.totalRounds || (careerState.calendar?.length || 38),
       champion: careerState.champion || (careerState.standings && careerState.standings[0]) || null,
       topScorer: careerState.topScorers && careerState.topScorers[0] ? careerState.topScorers[0] : null
     };
@@ -411,7 +412,7 @@ export function getNextMatchPreview(careerState) {
 
   return {
     round: roundData.roundNumber,
-    totalRounds: careerState.totalRounds || (careerState.calendar?.length || 22),
+    totalRounds: careerState.totalRounds || (careerState.calendar?.length || 38),
     isHome,
     homeTeam,
     awayTeam,
@@ -441,7 +442,7 @@ export function getLeagueStatusSummary(careerState) {
   return {
     leagueName: careerState.league?.name || '',
     round: careerState.currentRound || 1,
-    totalRounds: careerState.totalRounds || 22,
+    totalRounds: careerState.totalRounds || (careerState.calendar?.length || 38),
     season: careerState.currentSeason || 2026,
     userClubPosition: userPosition,
     isSeasonFinished: !!careerState.isSeasonFinished,
@@ -1011,7 +1012,7 @@ export function finalizeMatchResult(careerState, match) {
   const pendingRound = Array.isArray(careerState.calendar) ? careerState.calendar.find(r => !r.completed) : null;
   if (!pendingRound) {
     careerState.isSeasonFinished = true;
-    careerState.currentRound = careerState.calendar ? careerState.calendar.length : (careerState.totalRounds || 22);
+    careerState.currentRound = careerState.calendar ? careerState.calendar.length : (careerState.totalRounds || 38);
     careerState.champion = careerState.standings ? careerState.standings[0] : null;
   } else {
     careerState.currentRound = pendingRound.roundNumber;
@@ -1044,7 +1045,7 @@ export function ensureAllLeaguesInitialized(careerState) {
         country: league.country,
         flag: league.flag,
         currencySymbol: league.currencySymbol,
-        totalRounds: careerState.totalRounds || (careerState.calendar?.length || 22),
+        totalRounds: careerState.totalRounds || (careerState.calendar?.length || 38),
         currentRound: careerState.currentRound || 1,
         calendar: careerState.calendar,
         standings: careerState.standings,
@@ -1055,8 +1056,10 @@ export function ensureAllLeaguesInitialized(careerState) {
       return;
     }
 
-    // Se a outra liga ainda não foi inicializada
-    if (!careerState.otherLeagues[league.id] || !Array.isArray(careerState.otherLeagues[league.id].calendar)) {
+    // Se a outra liga ainda não foi inicializada ou tem menos de 20 clubes (atualização de formato)
+    const existingOther = careerState.otherLeagues[league.id];
+    const expectedClubsCount = getClubsByLeague(league.id).length;
+    if (!existingOther || !Array.isArray(existingOther.calendar) || !Array.isArray(existingOther.standings) || existingOther.standings.length < expectedClubsCount) {
       const { calendar, totalRounds } = generateLeagueCalendar(league.id);
       const standings = generateInitialStandings(league.id);
       careerState.otherLeagues[league.id] = {
@@ -1103,6 +1106,10 @@ export function advanceOtherLeagues(careerState, roundNumber) {
     const otherData = careerState.otherLeagues[league.id];
     if (!otherData || otherData.isSeasonFinished) return;
 
+    if (!Array.isArray(otherData.topScorers)) {
+      otherData.topScorers = [];
+    }
+
     // Simula a rodada correspondente se ainda não estiver concluída
     const roundData = otherData.calendar.find(r => r.roundNumber === roundNumber);
     if (roundData && !roundData.completed && Array.isArray(roundData.matches)) {
@@ -1111,7 +1118,7 @@ export function advanceOtherLeagues(careerState, roundNumber) {
           const homeClub = getClubById(match.homeClubId);
           const awayClub = getClubById(match.awayClubId);
           if (homeClub && awayClub) {
-            const result = simulateAiMatch(homeClub, awayClub, careerState);
+            const result = simulateAiMatch(homeClub, awayClub, careerState, otherData.topScorers);
             match.homeScore = result.homeScore;
             match.awayScore = result.awayScore;
             match.completed = true;

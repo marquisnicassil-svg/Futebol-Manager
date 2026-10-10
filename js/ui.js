@@ -60,9 +60,9 @@ let activeSubstituteSlotIndex = null;
 // Filtros e controles de Mercado (Etapa 5)
 let currentMarketTab = 'buy'; // 'buy' | 'sell'
 let currentMarketClubFilter = 'ALL'; // 'ALL' | 'FREE' | clubId
-let currentMarketFilterPos = 'ALL';
 let currentMarketSearchQuery = '';
 let currentMarketSort = 'ovr_desc';
+let currentMarketLeagueFilter = null; // null = liga do clube do usuário
 
 // Estado da simulação da partida ao vivo (Etapa 3)
 let activeMatch = null;
@@ -1771,13 +1771,14 @@ function renderChampionshipScreen(contentArea, career) {
   // Obter dados da liga selecionada
   let viewedLeagueData = null;
   if (isUserLeague) {
+    const leagueMeta = getLeagueById(career.league.id) || career.league;
     viewedLeagueData = {
       leagueId: career.league.id,
       name: career.league.name,
       country: career.league.country,
-      flag: career.league.id === 'bra_serie_a' ? '🇧🇷' : career.league.id === 'eng_premier' ? '🏴󠁧󠁢󠁥󠁮󠁧󠁿' : '🇪🇸',
+      flag: career.league.flag || leagueMeta?.flag || '⚽',
       currencySymbol: career.league.currencySymbol,
-      totalRounds: career.totalRounds || (career.calendar?.length || 22),
+      totalRounds: career.totalRounds || (career.calendar?.length || 38),
       currentRound: career.currentRound || 1,
       calendar: career.calendar || [],
       standings: career.standings || [],
@@ -1788,14 +1789,15 @@ function renderChampionshipScreen(contentArea, career) {
   } else if (career.otherLeagues && career.otherLeagues[currentViewedLeagueId]) {
     viewedLeagueData = career.otherLeagues[currentViewedLeagueId];
   } else {
-    // Fallback caso não exista
+    // Fallback dinâmico para qualquer das 14 ligas
+    const leagueMeta = getLeagueById(currentViewedLeagueId);
     viewedLeagueData = {
       leagueId: currentViewedLeagueId,
-      name: currentViewedLeagueId === 'bra_serie_a' ? 'Brasileirão Série A' : currentViewedLeagueId === 'eng_premier' ? 'Premier League' : 'La Liga',
-      country: currentViewedLeagueId === 'bra_serie_a' ? 'Brasil' : currentViewedLeagueId === 'eng_premier' ? 'Inglaterra' : 'Espanha',
-      flag: currentViewedLeagueId === 'bra_serie_a' ? '🇧🇷' : currentViewedLeagueId === 'eng_premier' ? '🏴󠁧󠁢󠁥󠁮󠁧󠁿' : '🇪🇸',
-      currencySymbol: currentViewedLeagueId === 'bra_serie_a' ? 'R$' : currentViewedLeagueId === 'eng_premier' ? '£' : '€',
-      totalRounds: 22,
+      name: leagueMeta?.name || 'Campeonato',
+      country: leagueMeta?.country || 'País',
+      flag: leagueMeta?.flag || '⚽',
+      currencySymbol: leagueMeta?.currencySymbol || 'R$',
+      totalRounds: 38,
       currentRound: career.currentRound || 1,
       calendar: [],
       standings: [],
@@ -1808,7 +1810,7 @@ function renderChampionshipScreen(contentArea, career) {
   const standings = viewedLeagueData.standings || [];
   const calendar = viewedLeagueData.calendar || [];
   const topScorers = viewedLeagueData.topScorers || [];
-  const totalRounds = viewedLeagueData.totalRounds || (calendar.length || 22);
+  const totalRounds = viewedLeagueData.totalRounds || (calendar.length || 38);
 
   if (!calendarSelectedRound || calendarSelectedRound > totalRounds || calendarSelectedRound < 1) {
     calendarSelectedRound = viewedLeagueData.currentRound || 1;
@@ -2851,15 +2853,18 @@ function calculateBarPercent(val1, val2) {
 
 function renderMarketScreen(contentArea, career) {
   career = getCareerState() || career;
-  ensureAllLeagueSquads(career);
+  if (!currentMarketLeagueFilter) {
+    currentMarketLeagueFilter = career.league?.id || 'bra_serie_a';
+  }
+  ensureAllLeagueSquads(career, currentMarketLeagueFilter);
 
   const currency = career.league?.currencySymbol || 'R$';
   const finances = getFinancialOverview(career);
   const mySquad = career.squad || [];
 
-  // Obter jogadores de acordo com o filtro de clube atual
-  const marketPlayers = getPlayersForMarket(career, currentMarketClubFilter);
-  const allClubs = getAllMarketClubs(career);
+  // Obter jogadores de acordo com o filtro de clube atual e liga selecionada no mercado
+  const marketPlayers = getPlayersForMarket(career, currentMarketClubFilter, currentMarketLeagueFilter);
+  const allClubs = getAllMarketClubs(career, currentMarketLeagueFilter);
   const freeAgentsCount = (career.freeAgents || []).length;
 
   contentArea.innerHTML = `
@@ -2904,11 +2909,34 @@ function renderMarketBuyTabHtml(career, marketPlayers, allClubs, finances, curre
   const countMei = marketPlayers.filter(p => p.position === 'MEI').length;
   const countAta = marketPlayers.filter(p => p.position === 'ATA').length;
 
+  const currentLeagueObj = INITIAL_LEAGUES.find(l => l.id === currentMarketLeagueFilter) || career.league;
+
   return `
-    <!-- Seletor de Clubes Presentes no Jogo -->
+    <!-- Seletor de Liga no Mercado (14 Ligas) -->
+    <div style="margin-bottom: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+        <span>LIGA DE ORIGEM:</span>
+        <span style="font-size: 10px; color: #38bdf8;">${currentLeagueObj.flag} ${currentLeagueObj.name} (${allClubs.length} clubes)</span>
+      </div>
+      <div class="competition-league-selector" style="margin-bottom: 6px;">
+        ${INITIAL_LEAGUES.map(league => {
+          const isSelected = league.id === currentMarketLeagueFilter;
+          const isUserClubLeague = league.id === career.league.id;
+          return `
+            <button class="league-selector-btn ${isSelected ? 'active' : ''}" data-market-league="${league.id}">
+              <span class="league-selector-badge">${league.flag}</span>
+              <span>${league.country}</span>
+              ${isUserClubLeague ? '<span class="league-selector-indicator">Minha</span>' : ''}
+            </button>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Seletor de Clubes Presentes na Liga Selecionada -->
     <div style="margin-bottom: 4px;">
       <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
-        <span>CLUBES DA LIGA & MERCADO:</span>
+        <span>CLUBES & AGENTES LIVRES:</span>
         <span style="font-size: 10px; color: #38bdf8;">Toque para filtrar por clube</span>
       </div>
       <div class="market-club-selector-scroll">
@@ -3250,6 +3278,15 @@ function attachMarketEvents(contentArea, career) {
     });
   }
 
+  // Filtro de Liga no Mercado (14 ligas)
+  contentArea.querySelectorAll('.league-selector-btn[data-market-league]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentMarketLeagueFilter = e.currentTarget.dataset.marketLeague;
+      currentMarketClubFilter = 'ALL';
+      renderMarketScreen(contentArea, career);
+    });
+  });
+
   // Filtro de Clube
   contentArea.querySelectorAll('.club-filter-pill[data-club-filter]').forEach(pill => {
     pill.addEventListener('click', (e) => {
@@ -3259,7 +3296,7 @@ function attachMarketEvents(contentArea, career) {
 
       const listContainer = document.getElementById('market-cards-list-container');
       if (listContainer) {
-        const players = getPlayersForMarket(career, currentMarketClubFilter);
+        const players = getPlayersForMarket(career, currentMarketClubFilter, currentMarketLeagueFilter);
         listContainer.innerHTML = renderMarketBuyCardsHtml(career, players, currency);
         attachMarketCardActionListeners(contentArea, career);
       }
@@ -3274,7 +3311,7 @@ function attachMarketEvents(contentArea, career) {
       const listContainer = document.getElementById('market-cards-list-container');
       if (listContainer) {
         if (currentMarketTab === 'buy') {
-          const players = getPlayersForMarket(career, currentMarketClubFilter);
+          const players = getPlayersForMarket(career, currentMarketClubFilter, currentMarketLeagueFilter);
           listContainer.innerHTML = renderMarketBuyCardsHtml(career, players, currency);
         } else {
           listContainer.innerHTML = renderMarketSellCardsHtml(career, career.squad || [], currency);
@@ -3294,7 +3331,7 @@ function attachMarketEvents(contentArea, career) {
       const listContainer = document.getElementById('market-cards-list-container');
       if (listContainer) {
         if (currentMarketTab === 'buy') {
-          const players = getPlayersForMarket(career, currentMarketClubFilter);
+          const players = getPlayersForMarket(career, currentMarketClubFilter, currentMarketLeagueFilter);
           listContainer.innerHTML = renderMarketBuyCardsHtml(career, players, currency);
         } else {
           listContainer.innerHTML = renderMarketSellCardsHtml(career, career.squad || [], currency);
@@ -3311,7 +3348,7 @@ function attachMarketEvents(contentArea, career) {
       currentMarketSort = e.target.value;
       const listContainer = document.getElementById('market-cards-list-container');
       if (listContainer) {
-        const players = getPlayersForMarket(career, currentMarketClubFilter);
+        const players = getPlayersForMarket(career, currentMarketClubFilter, currentMarketLeagueFilter);
         listContainer.innerHTML = renderMarketBuyCardsHtml(career, players, currency);
         attachMarketCardActionListeners(contentArea, career);
       }

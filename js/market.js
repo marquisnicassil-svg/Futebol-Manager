@@ -12,7 +12,8 @@ import {
   getClubById,
   calculateSquadOverall,
   generateClubSquad,
-  ROSTER_NAMES
+  ROSTER_NAMES,
+  INITIAL_CLUBS
 } from './data.js';
 import { buildOptimalLineup } from './state.js';
 
@@ -75,21 +76,32 @@ export function getFinancialOverview(careerState) {
  * Garante que todos os clubes adversários da liga possuam elenco completo gerado e armazenado
  * @param {Object} careerState 
  */
-export function ensureAllLeagueSquads(careerState) {
+export function ensureClubSquad(careerState, clubId) {
+  if (!careerState) return [];
+  if (clubId === careerState.club?.id) return careerState.squad || [];
+  if (!careerState.aiSquads) careerState.aiSquads = {};
+
+  if (!careerState.aiSquads[clubId] || !Array.isArray(careerState.aiSquads[clubId]) || careerState.aiSquads[clubId].length === 0) {
+    const club = getClubById(clubId);
+    if (club) {
+      careerState.aiSquads[clubId] = generateClubSquad(club);
+    }
+  }
+  return careerState.aiSquads[clubId] || [];
+}
+
+export function ensureAllLeagueSquads(careerState, targetLeagueId = null) {
   if (!careerState) return;
   if (!careerState.aiSquads) {
     careerState.aiSquads = {};
   }
 
-  const leagueId = careerState.league?.id || 'bra_serie_a';
+  const leagueId = targetLeagueId || careerState.league?.id || 'bra_serie_a';
   const allClubs = getClubsByLeague(leagueId);
 
   allClubs.forEach(club => {
     if (club.id === careerState.club?.id) return; // Clube do usuário já está em careerState.squad
-
-    if (!careerState.aiSquads[club.id] || !Array.isArray(careerState.aiSquads[club.id]) || careerState.aiSquads[club.id].length === 0) {
-      careerState.aiSquads[club.id] = generateClubSquad(club);
-    }
+    ensureClubSquad(careerState, club.id);
   });
 
   // Garantir também o pool de agentes livres
@@ -201,36 +213,40 @@ export function generateFreeAgentsPool(careerState) {
 }
 
 /**
- * Retorna todos os clubes da liga para exibição no seletor do mercado
+ * Retorna todos os clubes para exibição no seletor do mercado (filtrados por liga ou da liga do jogador)
  * @param {Object} careerState 
+ * @param {string|null} leagueFilter
  * @returns {Array} Lista de clubes adversários com seus dados
  */
-export function getAllMarketClubs(careerState) {
+export function getAllMarketClubs(careerState, leagueFilter = null) {
   if (!careerState) return [];
-  ensureAllLeagueSquads(careerState);
 
-  const leagueId = careerState.league?.id || 'bra_serie_a';
-  const allClubs = getClubsByLeague(leagueId);
+  const targetLeagueId = leagueFilter || careerState.league?.id || 'bra_serie_a';
+  ensureAllLeagueSquads(careerState, targetLeagueId);
+  const allClubs = getClubsByLeague(targetLeagueId);
   return allClubs.filter(c => c.id !== careerState.club?.id);
 }
 
 /**
- * Obtém os jogadores de um clube específico, ou de todos os clubes, ou agentes livres
+ * Obtém os jogadores de um clube específico, ou de todos os clubes de uma liga, ou agentes livres
  * @param {Object} careerState 
  * @param {string} clubId 'ALL' | 'FREE' | ou ID específico do clube
+ * @param {string|null} leagueFilter
  * @returns {Array} Lista de jogadores
  */
-export function getPlayersForMarket(careerState, clubId = 'ALL') {
+export function getPlayersForMarket(careerState, clubId = 'ALL', leagueFilter = null) {
   if (!careerState) return [];
-  ensureAllLeagueSquads(careerState);
+
+  const targetLeagueId = leagueFilter || careerState.league?.id || 'bra_serie_a';
+  ensureAllLeagueSquads(careerState, targetLeagueId);
 
   if (clubId === 'FREE') {
     return careerState.freeAgents || [];
   }
 
   if (clubId !== 'ALL') {
-    // Clube específico
-    const squad = careerState.aiSquads[clubId];
+    // Clube específico (de qualquer das 14 ligas)
+    const squad = ensureClubSquad(careerState, clubId);
     if (Array.isArray(squad)) {
       const clubInfo = getClubById(clubId);
       return squad.map(p => ({
@@ -244,12 +260,12 @@ export function getPlayersForMarket(careerState, clubId = 'ALL') {
     return [];
   }
 
-  // Todos os clubes da liga + Agentes Livres
+  // Todos os clubes da liga selecionada + Agentes Livres
   let allPlayers = [];
-  const rivalClubs = getAllMarketClubs(careerState);
+  const rivalClubs = getAllMarketClubs(careerState, targetLeagueId);
 
   rivalClubs.forEach(c => {
-    const sq = careerState.aiSquads[c.id];
+    const sq = ensureClubSquad(careerState, c.id);
     if (Array.isArray(sq)) {
       sq.forEach(p => {
         allPlayers.push({
@@ -606,16 +622,20 @@ export function getTransferOffersForPlayer(careerState, player) {
     });
   }
 
-  // 2. Proposta do exterior
-  const ext = externalBuyers[Math.floor(Math.random() * externalBuyers.length)];
-  const extMultiplier = 0.98 + (Math.random() * 0.25); // 98% a 123% do valor
-  offers.push({
-    buyerId: `ext_${ext.name.toLowerCase().replace(/\s+/g, '_')}`,
-    buyerName: ext.name,
-    buyerOrigin: ext.league,
-    offerAmount: Math.round(baseValue * extMultiplier),
-    isNational: false
-  });
+  // 2. Proposta do exterior (clube de outra liga do jogo)
+  const otherLeagueClubs = INITIAL_CLUBS.filter(c => c.leagueId !== careerState.league?.id);
+  if (otherLeagueClubs.length > 0) {
+    const ext = otherLeagueClubs[Math.floor(Math.random() * otherLeagueClubs.length)];
+    const extLeague = getLeagueById(ext.leagueId);
+    const extMultiplier = 0.98 + (Math.random() * 0.28);
+    offers.push({
+      buyerId: ext.id,
+      buyerName: ext.name,
+      buyerOrigin: extLeague ? `${extLeague.name} (${extLeague.country})` : ext.country,
+      offerAmount: Math.round(baseValue * extMultiplier),
+      isNational: false
+    });
+  }
 
   return offers;
 }
